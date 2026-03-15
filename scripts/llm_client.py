@@ -37,12 +37,15 @@ class LLMClient:
         self.max_retries = max_retries
         self.initial_backoff = initial_backoff
 
-        api_key = os.environ.get(api_key_env)
-        if not api_key:
+        api_key = os.environ.get(api_key_env, "")
+        if not api_key and provider not in ("openai_compatible",):
             raise EnvironmentError(
                 f"API key environment variable '{api_key_env}' is not set. "
                 f"Export it before running: export {api_key_env}=<your-key>"
             )
+        # OpenAI-compatible providers (e.g. Ollama) may not need a real key
+        if not api_key:
+            api_key = "unused"
 
         if provider == "anthropic":
             try:

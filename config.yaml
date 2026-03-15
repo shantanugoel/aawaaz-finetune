@@ -26,14 +26,24 @@ dataset:
       enabled: true
     - repo: "danielrosehill/Transcription-Cleanup-Trainer"
       enabled: false
-  # Synthetic generation
+  # Synthetic generation — using Ollama Cloud via local proxy
+  # Run: ollama signin && ollama run minimax-m2.5:cloud
+  # Local Ollama proxies to cloud inference at http://localhost:11434/v1
+  # No API key needed — auth is handled by `ollama signin`
   synthetic:
     enabled: true
     num_samples: 5000           # How many synthetic pairs to generate
-    provider: "anthropic"       # "anthropic", "openai", or "openai_compatible"
-    model: "claude-sonnet-4-20250514"
-    api_key_env: "ANTHROPIC_API_KEY"  # Env var name holding the API key
-    # base_url: ""              # Only needed for "openai_compatible" provider
+    provider: "openai_compatible"
+    model: "minimax-m2.5:cloud" # Best JSON/structured output accuracy (HumanEval 92%, SWE-Bench 80.2%)
+    api_key_env: "OLLAMA_UNUSED" # Required by OpenAI SDK but ignored by Ollama
+    base_url: "http://localhost:11434/v1"
+    # Alternatives (uncomment to switch):
+    #   model: "kimi-k2.5:cloud"    # Best for multimodal/large context
+    #   model: "glm-5:cloud"        # Strong reasoning, open-source
+    # Fallback to Anthropic (change provider + base_url):
+    #   provider: "anthropic"
+    #   model: "claude-sonnet-4-20250514"
+    #   api_key_env: "ANTHROPIC_API_KEY"
     batch_size: 25              # Pairs per API call
     categories:                 # Distribution of synthetic data
       casual_conversation: 0.15
@@ -48,17 +58,17 @@ dataset:
       financial_business: 0.07
       shopping_lists: 0.03
       self_corrections_heavy: 0.07  # Focus on "wait no, I meant..."
-    # LLM-as-judge validation
+    # LLM-as-judge validation — uses a DIFFERENT model to avoid self-preference bias
     validation:
       enabled: true
       sample_rate: 0.12           # Judge 12% of generated pairs (cost-effective sweet spot)
       pass_threshold: 0.90        # If >=90% of sampled pairs pass, accept the whole category
       reject_threshold: 0.70      # If <70% pass, reject entire category and flag for prompt revision
       # Between 70-90%: accept but log warning, suggest manual review
-      provider: "anthropic"       # Can differ from generation provider
-      model: "claude-sonnet-4-20250514"  # Use same or cheaper model for judging
-      api_key_env: "ANTHROPIC_API_KEY"
-      # base_url: ""              # Only needed for "openai_compatible" provider
+      provider: "openai_compatible"
+      model: "kimi-k2.5:cloud"   # Different model family avoids self-preference bias
+      api_key_env: "OLLAMA_UNUSED"
+      base_url: "http://localhost:11434/v1"
   # Split ratios
   train_ratio: 0.90
   valid_ratio: 0.05
