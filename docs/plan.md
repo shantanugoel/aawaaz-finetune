@@ -77,18 +77,24 @@
 
 ---
 
-### WU-3: `03b_validate_synthetic.py`
+### WU-3: `03b_validate_synthetic.py` ✅
 **Spec sections:** `03b_validate_synthetic.py` — LLM-as-Judge Quality Gate (lines 316–399)  
 **Deliverables:**
-- [ ] Sample `sample_rate` fraction of pairs per category
-- [ ] Send each sampled pair to LLM judge with the exact judge prompt from spec
-- [ ] Parse binary pass/fail on 4 criteria: `input_realistic`, `content_preserved`, `no_hallucination`, `corrections_applied`
-- [ ] Per-category decision: pass (≥90%), warn (70–90%), reject (<70%)
-- [ ] Rejected categories: move file to `data/synthetic/rejected/`
-- [ ] Individual pair rejection: remove pairs failing `content_preserved` or `no_hallucination` from accepted categories
-- [ ] Output: `validation_report.json` (full results), `validation_summary.txt` (human-readable)
-- [ ] Cost estimation + confirmation prompt (skippable with `--yes`)
-- [ ] Flags: `--sample-rate`, `--full`, `--category`, `--yes`, `--verbose`
+- [x] Sample `sample_rate` fraction of pairs per category
+- [x] Send each sampled pair to LLM judge with the exact judge prompt from spec
+- [x] Parse binary pass/fail on 4 criteria: `input_realistic`, `content_preserved`, `no_hallucination`, `corrections_applied`
+- [x] Per-category decision: pass (≥90%), warn (70–90%), reject (<70%)
+- [x] Rejected categories: move file to `data/synthetic/rejected/`
+- [x] Individual pair rejection: remove pairs failing `content_preserved` or `no_hallucination` from accepted categories
+- [x] Output: `validation_report.json` (full results), `validation_summary.txt` (human-readable)
+- [x] Cost estimation + confirmation prompt (skippable with `--yes`)
+- [x] Flags: `--sample-rate`, `--full`, `--category`, `--yes`, `--verbose`
+- [x] Fail-closed: parse/API errors count as failures in pass rate denominator
+- [x] Atomic file writes (write-to-temp + `os.replace`) to prevent data loss
+- [x] Rejected file move guards against overwriting existing files
+- [x] Reports written before destructive file mutations
+- [x] Per-criterion logging and prompt improvement suggestions for rejected/warned categories
+- [x] Warns about unexpected synthetic files on disk not in config
 
 **Dependencies:** WU-2 (needs synthetic data files to exist)  
 **Open questions / flags:** None — spec is very detailed here.
