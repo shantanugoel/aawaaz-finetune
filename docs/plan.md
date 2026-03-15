@@ -144,30 +144,34 @@
 
 ---
 
-### WU-6: `06_finetune.py`
+### WU-6: `06_finetune.py` ✅
 **Spec sections:** `06_finetune.py` (lines 433–536), mask_prompt (lines 683–687), Qwen3 Thinking Mode (lines 668–675), Model-Specific Considerations (lines 706–709)  
 **Deliverables:**
-- [ ] **Linux/Unsloth path:**
+- [x] **Linux/Unsloth path:**
   - Load model with `FastLanguageModel.from_pretrained` (full precision)
   - Apply LoRA via `get_peft_model`
   - Format data with `apply_chat_template(enable_thinking=False)`
-  - `SFTTrainer` with all config params
-  - Save adapters
-- [ ] **Mac/MLX path:**
+  - `SFTTrainer` with all config params + `DataCollatorForCompletionOnlyLM` for prompt masking
+  - Save adapters (best model via `load_best_model_at_end=True`)
+- [x] **Mac/MLX path:**
   - Shell out to `mlx_lm.lora` with all flags from config
   - Parse and log training output (loss, val loss)
-- [ ] Platform detection from config
-- [ ] Chat template validation: round-trip a sample through tokenizer before training starts
-- [ ] Save best checkpoint (lowest val loss)
-- [ ] Resume from last checkpoint if interrupted
-- [ ] Training summary: final losses, total time, tokens processed
-- [ ] `--model` flag to train specific model
+  - Best checkpoint detection and copy to `adapters.safetensors`
+- [x] Platform detection from config
+- [x] Chat template validation: round-trip a sample through tokenizer before training starts (validates actual model source)
+- [x] Save best checkpoint (lowest val loss) — Linux via HF Trainer, Mac via log parsing
+- [x] Resume from last checkpoint if interrupted — Linux via `checkpoint-*`, Mac via `adapters-*.safetensors`
+- [x] Training summary: final losses, total time, best eval loss
+- [x] `--model` flag to train specific model
+- [x] `--force` cleans adapter dir before retrain
+- [x] `--dry-run` works without heavy ML imports
 
 **Dependencies:** WU-4 (training data), WU-5 (base models)  
-**Open questions / flags:**
-1. **Unsloth `load_in_4bit=False` with `unsloth_model`.** The spec says to load the *Unsloth variant* (`unsloth/Qwen3-0.6B`) but with `load_in_4bit=False`. Unsloth variants are typically pre-configured for 4-bit. Loading them at full precision should work (Unsloth supports this), but I want to flag it: if you're training at full precision anyway, we could also just load the base HF model (`Qwen/Qwen3-0.6B`) directly with standard HF/PEFT instead of going through Unsloth. **Recommendation: use Unsloth anyway** — it still provides optimized training kernels even at full precision. Just flagging in case you had a preference.
-2. **`SFTTrainer` prompt masking.** The spec says SFTTrainer "should" mask prompts automatically with messages format. Recent TRL versions (≥0.12) do support this when you pass `messages` field directly (not `text`). However, the spec's code example pre-applies the template into a `text` field, which bypasses SFTTrainer's built-in masking. **I'll check TRL docs at implementation time** and either: (a) pass `messages` directly if SFTTrainer supports it with chat template handling, or (b) use the `text` approach from the spec and implement a custom `DataCollatorForCompletionOnlyLM` to mask the prompt tokens. I'll verify by checking that initial loss is reasonable (~2-4, not ~0).
-3. **Best checkpoint saving.** HF Trainer has `load_best_model_at_end=True` + `metric_for_best_model="eval_loss"`. I'll use this rather than custom logic. For MLX, `mlx_lm.lora` doesn't have this natively — I'll parse the log to identify the best checkpoint iteration and copy/symlink it.
+**Decisions made:**
+1. **Unsloth variant used** — as recommended, Unsloth provides optimized kernels even at full precision.
+2. **Prompt masking** — used `DataCollatorForCompletionOnlyLM` with `<|im_start|>assistant\n` response template to mask prompt tokens. Also includes initial eval loss sanity check (warns if < 0.1).
+3. **Best checkpoint** — Linux: `load_best_model_at_end=True` + `metric_for_best_model="eval_loss"`. Mac: parse logs for lowest val_loss iteration and copy checkpoint.
+4. **Model source resolution** — centralized `_resolve_model_source()` helper used by both validation and training.
 
 ---
 
