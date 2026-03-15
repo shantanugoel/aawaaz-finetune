@@ -196,14 +196,22 @@
 
 ---
 
-### WU-8: `08_quantize.py`
+### WU-8: `08_quantize.py` ✅
 **Spec sections:** `08_quantize.py` (lines 568–581), Quantization notes (lines 711–715)  
 **Deliverables:**
-- [ ] Run `mlx_lm.convert` with `--quantize`, `--q-bits`, `--q-group-size`
-- [ ] Detect input path: `models/fused/` (Mac path) or `models/mlx/` (Linux→Mac path)
-- [ ] Post-quantization sanity check: generate 5 test outputs, print them
-- [ ] Warning if not running on Mac (MLX required)
-- [ ] Log: model sizes before/after, compression ratio
+- [x] Run `mlx_lm.convert` with `--quantize`, `--q-bits`, `--q-group-size`
+- [x] Detect input path: `models/mlx/` (Linux→Mac path, preferred) or `models/fused/` (Mac path)
+- [x] Post-quantization sanity check: generate 5 test outputs, print them
+- [x] Warning if not running on Mac (MLX required) — fails on non-Darwin unless --dry-run
+- [x] Log: model sizes before/after, compression ratio
+- [x] Verify source is not already quantized (config.json metadata check)
+- [x] Full-precision vs quantized output comparison with degradation heuristics
+- [x] Verify output has expected files (config.json, tokenizer.json, tokenizer_config.json, *.safetensors, quantization metadata)
+- [x] Dynamic output naming (`{model}-{bits}bit`) to support non-4-bit configs
+- [x] Test prompts from test.jsonl with fallback to built-in prompts (always guarantees 5)
+- [x] `--force`, `--skip-sanity-check`, `--skip-comparison` flags
+- [x] Summary JSON saved per model (`quantize_summary.json`)
+- [x] `enable_thinking=False` with TypeError fallback, `<think>` tag stripping
 
 **Dependencies:** WU-7  
 **Open questions / flags:** None
