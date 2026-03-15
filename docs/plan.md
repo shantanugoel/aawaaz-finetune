@@ -45,26 +45,29 @@
 
 ---
 
-### WU-2: `03_generate_synthetic.py`
+### WU-2: `03_generate_synthetic.py` ✅
 **Spec sections:** `03_generate_synthetic.py` (lines 246–314)  
 **Deliverables:**
-- [ ] **Multi-provider LLM client** (shared with WU-3, lives in `scripts/llm_client.py`):
-  - `anthropic` — native Anthropic SDK
+- [x] **Multi-provider LLM client** (shared with WU-3, lives in `scripts/llm_client.py`):
+  - `anthropic` — native Anthropic SDK (with system message extraction)
   - `openai` — native OpenAI SDK
   - `openai_compatible` — OpenAI SDK with custom `base_url` (covers OpenRouter, Gemini, local servers, any OpenAI-compatible endpoint)
   - Config fields: `provider`, `model`, `api_key_env`, and optional `base_url` (only needed for `openai_compatible`)
   - Uniform interface: `generate(messages, **kwargs) → str` so all scripts are provider-agnostic
-- [ ] Generation prompt exactly as spec, with per-category guidance
-- [ ] Batch generation: send `batch_size` pairs per API call, parse JSON response
-- [ ] Exponential backoff retry (3 retries) on API errors
-- [ ] Incremental save: per-category JSONL (`data/synthetic/synthetic_{category}.jsonl`)
-- [ ] Resume support: on restart, count existing records per category, skip already-done batches
-- [ ] Combined output: `data/synthetic/all_synthetic.jsonl`
-- [ ] Progress bar with ETA (tqdm)
-- [ ] Validate each pair: both fields non-empty, output ≤ ~2× input length
-- [ ] `--dry-run`: print plan (samples per category, estimated API calls & cost) without calling API
-- [ ] `--synthetic-samples N`: override `num_samples` from config
-- [ ] Log: total generated, failed, retried, per-category counts
+- [x] Generation prompt exactly as spec, with per-category guidance
+- [x] Batch generation: send `batch_size` pairs per API call, parse JSON response
+- [x] Exponential backoff retry (3 retries) on API errors
+- [x] Incremental save: per-category JSONL (`data/synthetic/synthetic_{category}.jsonl`)
+- [x] Resume support: on restart, count existing valid JSONL records per category, skip already-done batches
+- [x] Combined output: `data/synthetic/all_synthetic.jsonl`
+- [x] Progress bar with ETA (tqdm)
+- [x] Validate each pair: both fields non-empty, output ≤ ~2× input length, no null bytes, no filler words in output
+- [x] `--dry-run`: print plan (samples per category, estimated API calls & cost) without calling API or creating directories
+- [x] `--synthetic-samples N`: override `num_samples` from config
+- [x] Log: total generated, failed, rejected, per-category counts
+- [x] Target-based generation loop (while current < target) with consecutive-failure safety valve
+- [x] Inter-batch delay for rate limiting
+- [x] Clean error handling with exit codes
 
 **Dependencies:** WU-0  
 **Open questions / flags:**
