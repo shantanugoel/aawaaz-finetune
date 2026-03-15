@@ -101,27 +101,31 @@
 
 ---
 
-### WU-4: `04_prepare_data.py`
+### WU-4: `04_prepare_data.py` ✅
 **Spec sections:** `04_prepare_data.py` (lines 400–424), Data Quality Validation (lines 689–696), Chat Template Handling (lines 676–681)  
 **Deliverables:**
-- [ ] Load all JSONL from `data/raw/` and accepted files from `data/synthetic/` (skip `rejected/`)
-- [ ] If validation wasn't run (no `validation_report.json`), load all synthetic with warning
-- [ ] Data quality validation (reject + log):
+- [x] Load all JSONL from `data/raw/` and accepted files from `data/synthetic/` (skip `rejected/`)
+- [x] If validation wasn't run (no `validation_report.json`), load all synthetic with warning
+- [x] Data quality validation (reject + log):
   - Output > 2× input length
   - Empty output with substantive input
   - Encoding issues (null bytes, mojibake detection)
   - Fillers remaining in output (unless in quoted speech)
+  - `<think>` tags in output (Qwen3 thinking mode leak)
   - Flag (don't reject): output adds content not in input
-- [ ] Convert to chat-messages format with system prompt (+ `/no_think`)
-- [ ] Deduplicate by normalized input text
-- [ ] Shuffle (seed from config), split train/valid/test
-- [ ] Save to `data/combined/{train,valid,test}.jsonl`
-- [ ] Log stats: total, per-source, split sizes, avg lengths, rejection counts
+- [x] Convert to chat-messages format with system prompt (+ `/no_think`)
+- [x] Deduplicate by normalized input text
+- [x] Shuffle (seed from config), split train/valid/test
+- [x] Save to `data/combined/{train,valid,test}.jsonl`
+- [x] Log stats: total, per-source, split sizes, avg lengths, rejection counts
+- [x] Robust JSONL loading: handles non-dict, non-string fields, malformed lines
+- [x] Only loads synthetic categories defined in config (skips unexpected files)
+- [x] Warns when validation is disabled in config
 
 **Dependencies:** WU-1 and WU-3 (or WU-2 if validation disabled)  
 **Open questions / flags:**
-1. **`/no_think` placement.** The spec says "append `\n/no_think` to the end of the system prompt content" but also says "better approach: set `enable_thinking: false` in the chat template application." I'll do **both** — append `/no_think` to system prompt text AND pass `enable_thinking=False` when applying chat templates later (belt-and-suspenders, as the spec itself recommends elsewhere). Sound good?
-2. **Chat template validation round-trip.** The spec says to write a validation function that round-trips through the tokenizer. This requires having the model/tokenizer downloaded (WU-5). I'll implement the validation function in this script but make it a **pre-training check** that runs in `06_finetune.py` (or optionally here with `--validate-template` if the tokenizer is available). Alternatively, I can add it to WU-5 as a post-download check.
+1. **`/no_think` placement.** ✅ Resolved: system prompt text kept clean in `prompts/system_prompt.txt`; `04_prepare_data.py` appends `/no_think` via `load_system_prompt(with_no_think=True)`.
+2. **Chat template validation round-trip.** ✅ Deferred to WU-6 as planned — requires model/tokenizer from WU-5. The `04_prepare_data.py` output is the canonical `messages` format that both MLX and HF training paths consume.
 
 ---
 
