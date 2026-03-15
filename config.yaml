@@ -25,7 +25,7 @@ dataset:
       output_col: "Output"
       enabled: true
     - repo: "danielrosehill/Transcription-Cleanup-Trainer"
-      enabled: true
+      enabled: false
   # Synthetic generation
   synthetic:
     enabled: true

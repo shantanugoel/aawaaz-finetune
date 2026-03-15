@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import importlib
 import json
 import logging
 import re
@@ -121,7 +122,7 @@ def require_dependency(
 ) -> Any:
     """Import a dependency lazily with a helpful failure message."""
     try:
-        return __import__(import_name, fromlist=["*"])
+        return importlib.import_module(import_name)
     except ImportError as exc:  # pragma: no cover - exercised by runtime environment
         raise RuntimeError(
             f"Missing required dependency '{import_name}'. "
