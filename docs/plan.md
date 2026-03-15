@@ -220,27 +220,38 @@
 
 ### WU-9: `09_evaluate.py`
 **Spec sections:** `09_evaluate.py` (lines 583–608), Evaluation config  
+**Status:** ✅ COMPLETE  
 **Deliverables:**
-- [ ] Load quantized MLX model via `mlx_lm`
-- [ ] Run inference on `num_samples` from test set (temperature=0)
-- [ ] Strip `<think>` tags from output if present (+ log warning)
-- [ ] Compute metrics:
+- [x] Load quantized MLX model via `mlx_lm`
+- [x] Run inference on `num_samples` from test set (temperature=0)
+- [x] Strip `<think>` tags from output if present (+ log warning)
+- [x] Compute metrics:
   - Exact match rate
-  - Character Error Rate (CER) via edit distance
-  - BLEU score (via `nltk` or `evaluate`)
-  - Format accuracy (custom): number conversion, filler removal, self-correction, emoji, punctuation
-  - Latency (tokens/sec)
-- [ ] Generate report in `eval_results/`:
-  - Summary JSON + human-readable text
-  - Per-category breakdown
-  - Worst 20 / Best 20 examples
-  - Side-by-side: input | expected | generated
-- [ ] `--model` flag
+  - Character Error Rate (CER) via `editdistance`
+  - BLEU score (corpus-level headline + smoothed sentence-level per-sample) via `nltk`
+  - Format accuracy (custom): number conversion, filler removal, self-correction, emoji, punctuation — each as separate sub-metrics with composite average
+  - Latency (tokens/sec + avg sec/sample)
+- [x] Generate report in `eval_results/{model_name}/`:
+  - `eval_summary.json` — full machine-readable results with per-sample data
+  - `eval_report.txt` — human-readable summary
+  - Per-category breakdown: N/A noted (test.jsonl lacks category metadata)
+  - Worst 20 / Best 20 examples ranked by CER
+  - Side-by-side: input | expected | generated in both reports
+- [x] `--model` flag
+- [x] `--force` flag (cleans old output dir)
+- [x] `--num-samples` override flag with validation
+- [x] Mac-only platform check (clear error on Linux)
+- [x] Metric dependency checks upfront (editdistance, nltk)
+- [x] Model directory validation (config.json, safetensors)
+- [x] Deterministic sampling with `shuffle_seed` from config
 
 **Dependencies:** WU-8 (needs quantized model)  
-**Open questions / flags:**
-1. **Mac-only.** This script requires MLX for inference. If run on Linux, it should fail with a clear message. I'll add a platform check.
-2. **CER implementation.** I'll use `editdistance` library (or implement Levenshtein) rather than pulling in a heavy ASR metrics package. Need to add this to `requirements-mac.txt`.
+**Design decisions:**
+1. **Mac-only.** Platform check mirrors `08_quantize.py`. Dry-run works on any platform.
+2. **CER:** Uses `editdistance` library (already in `requirements-mac.txt`).
+3. **BLEU:** Corpus BLEU as headline metric; smoothed sentence BLEU per-sample for diagnostics.
+4. **Format accuracy:** NaN for samples with no applicable checks (excluded from aggregate mean). Sub-checks are conditional — e.g., number check only activates when expected output has digits.
+5. **Per-category breakdown:** Skipped because `test.jsonl` has no category metadata. Noted as N/A in report.
 
 ---
 
