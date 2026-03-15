@@ -212,8 +212,9 @@ def judge_pair(
     try:
         raw = client.generate(
             messages,
-            max_tokens=256,
+            max_tokens=1024,
             temperature=0.0,
+            json_mode=True,
         )
     except RuntimeError as exc:
         logger.error("Judge API call failed: %s", exc)
@@ -222,39 +223,85 @@ def judge_pair(
     return _parse_judge_response(raw)
 
 
+def _extract_json_object(text: str) -> dict[str, Any] | None:
+    """Find and parse the first top-level JSON object in *text*.
+
+    Uses brace-depth tracking so it handles nested ``{}`` correctly,
+    unlike a simple ``\\{[^{}]+\\}`` regex.
+    """
+    start = text.find("{")
+    if start == -1:
+        return None
+
+    depth = 0
+    in_string = False
+    escape_next = False
+
+    for i in range(start, len(text)):
+        ch = text[i]
+        if escape_next:
+            escape_next = False
+            continue
+        if ch == "\\":
+            escape_next = True
+            continue
+        if ch == '"':
+            in_string = not in_string
+            continue
+        if in_string:
+            continue
+        if ch == "{":
+            depth += 1
+        elif ch == "}":
+            depth -= 1
+            if depth == 0:
+                candidate = text[start : i + 1]
+                try:
+                    return json.loads(candidate)
+                except json.JSONDecodeError:
+                    # Try the next '{' in the text
+                    start = text.find("{", i + 1)
+                    if start == -1:
+                        return None
+                    depth = 0
+    return None
+
+
 def _parse_judge_response(raw: str) -> dict[str, bool] | None:
     """Parse the JSON verdict from the judge LLM response.
 
-    Handles markdown code fences and extracts the JSON object.
+    Handles:
+    - ``<think>...</think>`` blocks from reasoning models
+    - Markdown code fences anywhere in the text (not just at start)
+    - Multi-line / nested JSON objects
+    - Reasoning text surrounding the JSON
     """
     import re
 
     text = raw.strip()
 
-    # Strip markdown code fences if present
-    if text.startswith("```"):
-        text = re.sub(r"^```[a-zA-Z]*\s*\n?", "", text)
-        text = re.sub(r"\n?```\s*$", "", text)
-        text = text.strip()
+    # Strip <think>...</think> blocks (Qwen3 / reasoning models)
+    text = re.sub(r"<think>.*?</think>", "", text, flags=re.DOTALL).strip()
 
+    # Try to extract JSON from a code fence anywhere in the text
+    fence_match = re.search(
+        r"```(?:json)?\s*\n?(.*?)\n?\s*```", text, flags=re.DOTALL
+    )
+    if fence_match:
+        text = fence_match.group(1).strip()
+
+    # 1. Try parsing the (possibly cleaned) text directly
     try:
         parsed = json.loads(text)
     except json.JSONDecodeError:
-        # Try to find a JSON object within the text
-        match = re.search(r"\{[^{}]+\}", text)
-        if match:
-            try:
-                parsed = json.loads(match.group())
-            except json.JSONDecodeError:
-                logger.warning(
-                    "Could not parse judge response as JSON: %.200s", raw
-                )
-                return None
-        else:
-            logger.warning(
-                "No JSON object found in judge response: %.200s", raw
-            )
-            return None
+        # 2. Extract the outermost { ... } by tracking brace depth
+        parsed = _extract_json_object(text)
+
+    if parsed is None:
+        logger.warning(
+            "Could not parse judge response as JSON: %.300s", raw
+        )
+        return None
 
     if not isinstance(parsed, dict):
         logger.warning(

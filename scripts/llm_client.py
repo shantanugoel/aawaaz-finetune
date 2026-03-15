@@ -86,6 +86,7 @@ class LLMClient:
         *,
         max_tokens: int = 8192,
         temperature: float = 1.0,
+        json_mode: bool = False,
     ) -> str:
         """Send a chat completion request with exponential backoff retry.
 
@@ -97,6 +98,10 @@ class LLMClient:
             Maximum tokens in the response.
         temperature:
             Sampling temperature.
+        json_mode:
+            If True, request JSON output format from the model.  Suppresses
+            reasoning/thinking text on models that support it (Gemini, OpenAI,
+            most OpenRouter models).
 
         Returns
         -------
@@ -115,6 +120,7 @@ class LLMClient:
                     messages=messages,
                     max_tokens=max_tokens,
                     temperature=temperature,
+                    json_mode=json_mode,
                 )
             except Exception as exc:
                 last_exc = exc
@@ -141,6 +147,7 @@ class LLMClient:
         messages: list[dict[str, str]],
         max_tokens: int,
         temperature: float,
+        json_mode: bool = False,
     ) -> str:
         """Call Anthropic's Messages API.
 
@@ -172,15 +179,48 @@ class LLMClient:
         messages: list[dict[str, str]],
         max_tokens: int,
         temperature: float,
+        json_mode: bool = False,
     ) -> str:
-        """Call OpenAI (or compatible) Chat Completions API."""
-        response = self._client.chat.completions.create(
-            model=self.model,
-            max_tokens=max_tokens,
-            temperature=temperature,
-            messages=messages,
-        )
-        return response.choices[0].message.content
+        """Call OpenAI (or compatible) Chat Completions API.
+
+        Handles reasoning models (e.g. Kimi K2.5) that may put output in
+        ``reasoning_content`` instead of ``content``.  When *json_mode* is
+        True, also disables reasoning/thinking to prevent the model from
+        burning the token budget on chain-of-thought.
+        """
+        kwargs: dict[str, Any] = {
+            "model": self.model,
+            "max_tokens": max_tokens,
+            "temperature": temperature,
+            "messages": messages,
+        }
+        if json_mode:
+            kwargs["response_format"] = {"type": "json_object"}
+            # Disable reasoning/thinking so the model outputs JSON directly
+            # instead of burning tokens on chain-of-thought.
+            # Works with OpenRouter, Moonshot, and compatible providers.
+            kwargs["extra_body"] = {"reasoning": {"effort": "none"}}
+
+        response = self._client.chat.completions.create(**kwargs)
+        message = response.choices[0].message
+        content = message.content
+
+        # Reasoning models (Kimi K2.5, etc.) may return content=None with
+        # the actual output in reasoning_content
+        if content is None:
+            reasoning = getattr(message, "reasoning_content", None)
+            if reasoning:
+                logger.debug(
+                    "content was None, falling back to reasoning_content"
+                )
+                content = reasoning
+
+        if content is None:
+            raise RuntimeError(
+                "API returned empty content (finish_reason="
+                f"{response.choices[0].finish_reason!r})"
+            )
+        return content
 
 
 def create_client_from_config(
