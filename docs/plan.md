@@ -277,17 +277,22 @@
 
 ---
 
-### WU-11: `run_pipeline.py` — Orchestrator
+### WU-11: `run_pipeline.py` — Orchestrator ✅
 **Spec sections:** `run_pipeline.py` (lines 630–663)  
 **Deliverables:**
-- [ ] `--all`, `--steps`, `--resume`, `--dry-run`
-- [ ] Config overrides: `--platform`, `--model`, `--synthetic-samples`, `--sample-rate`
-- [ ] Step dependency validation (e.g., step 6 requires 4+5)
-- [ ] State tracking in `.pipeline_state.json`
-- [ ] Clear step headers, summaries, elapsed time
-- [ ] Error reporting with fix suggestions
-- [ ] Steps: 2, 3, 3b, 4, 5, 6, 7, 8, 9, 10 (step 1/setup is manual, not orchestrated)
-- [ ] Step 10, to upload to HF should always need an explicit and standalone call to run_pipeline to prevent against accidental uploads
+- [x] `--all`, `--steps`, `--resume`, `--dry-run`
+- [x] Config overrides: `--platform`, `--model`, `--synthetic-samples`, `--sample-rate`
+- [x] Step dependency validation (e.g., step 6 requires 4+5)
+- [x] State tracking in `.pipeline_state.json`
+- [x] Clear step headers, summaries, elapsed time
+- [x] Error reporting with fix suggestions
+- [x] Steps: 2, 3, 3b, 4, 5, 6, 7, 8, 9, 10 (step 1/setup is manual, not orchestrated)
+- [x] Step 10, to upload to HF should always need an explicit and standalone call to run_pipeline to prevent against accidental uploads
+- [x] `--clear-state` to reset pipeline state
+- [x] `--all` dynamically excludes step 3/3b when synthetic/validation disabled in config
+- [x] Override validation (--synthetic-samples > 0, --sample-rate in (0,1])
+- [x] Atomic state writes, stale field cleanup on status transitions
+- [x] Auto-confirm child script prompts (--yes forwarded to 03b)
 
 **Dependencies:** All other WUs (this calls them)  
 **Open questions / flags:** None
