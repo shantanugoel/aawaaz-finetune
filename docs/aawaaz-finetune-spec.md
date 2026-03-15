@@ -13,7 +13,7 @@ I need you to build the **complete pipeline** for Stage 2: fine-tuning Qwen3 mod
 
 - **Mac:** M1 Max (64GB unified memory) — for MLX-based fine-tuning, testing, and final quantization
 - **Linux GPU box:** NVIDIA GPU with CUDA — for faster fine-tuning with Unsloth/HF Transformers
-- Both machines have Python 3.11+, pip, and standard dev tools
+- Both machines have Python 3.11+, uv, and standard dev tools
 
 ## Target Models
 
