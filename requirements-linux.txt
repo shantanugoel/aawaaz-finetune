@@ -1,0 +1,17 @@
+torch>=2.1.0
+unsloth
+transformers>=4.44.0
+datasets
+trl>=0.12.0
+peft
+accelerate
+bitsandbytes
+huggingface_hub
+pyyaml
+tqdm
+evaluate
+nltk
+rouge-score
+anthropic
+openai
+editdistance

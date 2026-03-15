@@ -1,0 +1,36 @@
+# Models and data — ignore all contents except .gitkeep directory markers
+data/*
+!data/*/
+data/*/*
+!data/*/*/
+data/*/*/*
+!data/*/.gitkeep
+!data/*/*/.gitkeep
+!data/*/*/*/.gitkeep
+models/*
+!models/*/
+models/*/*
+!models/*/.gitkeep
+!models/*/*/.gitkeep
+
+# Pipeline state
+.pipeline_state.json
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+
+# Virtual environment
+.venv/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db

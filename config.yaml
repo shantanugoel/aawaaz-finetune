@@ -1,0 +1,131 @@
+# === Project ===
+project_name: "aawaaz-transcriber"
+hf_username: "shantanugoel"  # For uploading
+
+# === Models ===
+models:
+  - name: "qwen3-0.6b"
+    base_model: "Qwen/Qwen3-0.6B"
+    unsloth_model: "unsloth/Qwen3-0.6B"  # For Unsloth fine-tuning
+    enabled: true
+  - name: "qwen3-1.7b"
+    base_model: "Qwen/Qwen3-1.7B"
+    unsloth_model: "unsloth/Qwen3-1.7B"
+    enabled: true
+
+# === Platform ===
+platform: "linux"  # "linux" (Unsloth/CUDA) or "mac" (MLX)
+
+# === Dataset ===
+dataset:
+  # Existing datasets to pull
+  hf_datasets:
+    - repo: "bingbangboom/whisper-transcripts"
+      input_col: "Transcript"
+      output_col: "Output"
+      enabled: true
+    - repo: "danielrosehill/Transcription-Cleanup-Trainer"
+      enabled: true
+  # Synthetic generation
+  synthetic:
+    enabled: true
+    num_samples: 5000           # How many synthetic pairs to generate
+    provider: "anthropic"       # "anthropic", "openai", or "openai_compatible"
+    model: "claude-sonnet-4-20250514"
+    api_key_env: "ANTHROPIC_API_KEY"  # Env var name holding the API key
+    # base_url: ""              # Only needed for "openai_compatible" provider
+    batch_size: 25              # Pairs per API call
+    categories:                 # Distribution of synthetic data
+      casual_conversation: 0.15
+      email_professional: 0.12
+      technical_code: 0.12
+      medical_clinical: 0.08
+      legal_contract: 0.08
+      meeting_notes: 0.10
+      recipe_cooking: 0.05
+      academic_research: 0.08
+      creative_writing: 0.05
+      financial_business: 0.07
+      shopping_lists: 0.03
+      self_corrections_heavy: 0.07  # Focus on "wait no, I meant..."
+    # LLM-as-judge validation
+    validation:
+      enabled: true
+      sample_rate: 0.12           # Judge 12% of generated pairs (cost-effective sweet spot)
+      pass_threshold: 0.90        # If >=90% of sampled pairs pass, accept the whole category
+      reject_threshold: 0.70      # If <70% pass, reject entire category and flag for prompt revision
+      # Between 70-90%: accept but log warning, suggest manual review
+      provider: "anthropic"       # Can differ from generation provider
+      model: "claude-sonnet-4-20250514"  # Use same or cheaper model for judging
+      api_key_env: "ANTHROPIC_API_KEY"
+      # base_url: ""              # Only needed for "openai_compatible" provider
+  # Split ratios
+  train_ratio: 0.90
+  valid_ratio: 0.05
+  test_ratio: 0.05
+  shuffle_seed: 42
+
+# === Training ===
+training:
+  # Common
+  max_seq_length: 2048
+  mask_prompt: true             # Only compute loss on assistant output
+  num_epochs: 3                 # Alternatively use iters
+  save_every: 200               # Save checkpoint every N steps
+  eval_every: 100               # Evaluate every N steps
+
+  # LoRA config
+  lora:
+    rank: 32                    # r — higher for small models
+    alpha: 64                   # Scaling factor (typically 2x rank)
+    dropout: 0.0
+    target_modules:             # Which layers to adapt
+      - "q_proj"
+      - "k_proj"
+      - "v_proj"
+      - "o_proj"
+      - "gate_proj"
+      - "up_proj"
+      - "down_proj"
+
+  # Linux/GPU (Unsloth) settings
+  linux:
+    learning_rate: 2e-5
+    batch_size: 8
+    gradient_accumulation_steps: 2
+    warmup_steps: 50
+    weight_decay: 0.01
+    optimizer: "adamw_8bit"
+    bf16: true
+    load_in_4bit: false         # Full precision for best quality fine-tune
+
+  # Mac/MLX settings
+  mac:
+    learning_rate: 1e-5
+    batch_size: 4
+    lora_layers: 16             # MLX-specific: number of layers to apply LoRA
+    iters: 1500                 # MLX uses iters instead of epochs
+    grad_accumulation_steps: 4
+    grad_checkpoint: true       # Trade compute for memory
+
+# === Quantization ===
+quantization:
+  bits: 4
+  group_size: 64
+
+# === Evaluation ===
+evaluation:
+  num_samples: 200              # How many test samples to evaluate
+  metrics:
+    - "exact_match"
+    - "char_error_rate"
+    - "bleu"
+    - "format_accuracy"         # Custom: checks numbers, punctuation, etc.
+  temperature: 0.0              # Deterministic for eval
+  max_tokens: 1024
+
+# === Upload ===
+upload:
+  enabled: false                # Set true when ready to upload
+  repo_prefix: "aawaaz"        # Will create aawaaz-qwen3-0.6b-transcriber-4bit etc.
+  private: false

@@ -1,28 +1,28 @@
 # Aawaaz Fine-Tuning Pipeline — Implementation Plan
 
-> **Spec:** `docs/aawaaz-finetune-spec.md` | **Status:** Pending approval
+> **Spec:** `docs/aawaaz-finetune-spec.md`
 
 ---
 
 ## Work Units
 
-### WU-0: Project Scaffolding & Shared Utilities
+### WU-0: Project Scaffolding & Shared Utilities ✅
 **Spec sections:** Project Structure, `config.yaml`, `prompts/system_prompt.txt`, Dependencies  
 **Deliverables:**
-- [ ] `config.yaml` (verbatim from spec)
-- [ ] `prompts/system_prompt.txt` (verbatim from spec, with `/no_think` appended)
-- [ ] `requirements-linux.txt` / `requirements-mac.txt`
-- [ ] `scripts/__init__.py` (empty, so scripts can share modules)
-- [ ] `scripts/common.py` — shared helpers used by every script:
+- [x] `config.yaml` (verbatim from spec)
+- [x] `prompts/system_prompt.txt` (verbatim from spec, with `/no_think` appended)
+- [x] `requirements-linux.txt` / `requirements-mac.txt`
+- [x] `scripts/__init__.py` (empty, so scripts can share modules)
+- [x] `scripts/common.py` — shared helpers used by every script:
   - Load & validate `config.yaml` (returns typed dict/dataclass)
   - Resolve model configs (filter by `--model` flag, handle `--model all`)
   - Standard `argparse` base with `--verbose`, `--dry-run`, `--config`
   - Logging setup (to stderr, `logging` module)
   - Path constants (`DATA_RAW`, `DATA_SYNTHETIC`, etc.)
-- [ ] Create empty directory structure (`data/raw/`, `data/synthetic/rejected/`, `data/combined/`, `data/eval/`, `models/base/`, `models/adapters/`, `models/fused/`, `models/mlx/`, `models/quantized/`, `eval_results/`)
-- [ ] `.gitignore` (ignore `models/`, `data/`, `.pipeline_state.json`, `__pycache__`, `.venv`)
-- [ ] `01_setup.sh` — platform-detect, create venv with `uv`, install from correct requirements file (run manually, NOT called by orchestrator)
-- [ ] `README.md` — concise: what the project is, quickstart (setup → run pipeline), link to spec for details
+- [x] Create empty directory structure (`data/raw/`, `data/synthetic/rejected/`, `data/combined/`, `data/eval/`, `models/base/`, `models/adapters/`, `models/fused/`, `models/mlx/`, `models/quantized/`, `eval_results/`)
+- [x] `.gitignore` (ignore `models/`, `data/`, `.pipeline_state.json`, `__pycache__`, `.venv`)
+- [x] `01_setup.sh` — platform-detect, create venv with `uv`, install from correct requirements file (run manually, NOT called by orchestrator)
+- [x] `README.md` — concise: what the project is, quickstart (setup → run pipeline), link to spec for details
 
 **Dependencies:** None  
 **Open questions / flags:** None

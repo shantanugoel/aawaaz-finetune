@@ -1,0 +1,12 @@
+mlx>=0.21.0
+mlx-lm>=0.21.0
+transformers>=4.44.0
+datasets
+huggingface_hub
+pyyaml
+tqdm
+evaluate
+nltk
+anthropic
+openai
+editdistance
