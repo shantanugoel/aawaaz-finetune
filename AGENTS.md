@@ -42,6 +42,7 @@ This project has a detailed specification: `aawaaz-finetune-spec.md`. It is the 
 - Use type hints on all function signatures
 - Use `pathlib.Path` not string concatenation for file paths
 - Use `logging` module, not `print()`, for operational output (print is fine for `--verbose` debug info or interactive prompts)
+- Never stage or commit changes to git yourself. Developer will do it themselves.
 
 ### Error Handling
 - Catch specific exceptions, not bare `except:`

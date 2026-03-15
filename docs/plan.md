@@ -29,14 +29,14 @@
 
 ---
 
-### WU-1: `02_pull_datasets.py`
+### WU-1: `02_pull_datasets.py` ✅
 **Spec sections:** `02_pull_datasets.py`  
 **Deliverables:**
-- [ ] Download `bingbangboom/whisper-transcripts` via HF `datasets` lib, map `Transcript` → `input`, `Output` → `output`
-- [ ] Download `danielrosehill/Transcription-Cleanup-Trainer` — clone/download repo, pair files from `whisper-transcripts/` with `manual-cleanups/` by filename
-- [ ] Save each source as `data/raw/{source_name}.jsonl` with schema `{"input": "...", "output": "..."}`
-- [ ] Skip re-download if output file exists (idempotent), support `--force`
-- [ ] Log stats: pairs per source, total
+- [x] Download `bingbangboom/whisper-transcripts` via HF `datasets` lib, map `Transcript` → `input`, `Output` → `output`
+- [x] Download `danielrosehill/Transcription-Cleanup-Trainer` — clone/download repo, pair files from `whisper-transcripts/` with `manual-cleanups/` by filename
+- [x] Save each source as `data/raw/{source_name}.jsonl` with schema `{"input": "...", "output": "..."}`
+- [x] Skip re-download if output file exists (idempotent), support `--force`
+- [x] Log stats: pairs per source, total
 
 **Dependencies:** WU-0  
 **Open questions / flags:**
