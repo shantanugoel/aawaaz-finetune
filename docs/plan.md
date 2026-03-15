@@ -255,22 +255,22 @@
 
 ---
 
-### WU-10: `10_upload.py`
+### WU-10: `10_upload.py` ✅
 **Spec sections:** `10_upload.py` (lines 610–628), MLX Compatibility (lines 717–725), Inference Settings (lines 727–733)  
 **Deliverables:**
-- [ ] Create/update HF repo: `{hf_username}/{repo_prefix}-{model_name}-transcriber-4bit`
-- [ ] Upload quantized model directory
-- [ ] Generate and upload model card (README.md) with:
+- [x] Create/update HF repo: `{hf_username}/{repo_prefix}-{model_name}-transcriber-4bit`
+- [x] Upload quantized model directory
+- [x] Generate and upload model card (README.md) with:
   - Model description, system prompt, example usage
   - Training details (dataset size, hyperparams, training loss)
   - Eval results
   - Python inference example (`mlx_lm`)
   - Swift usage note (`mlx-swift-lm`)
   - Recommended inference settings
-- [ ] Upload system prompt file
-- [ ] `--model` flag
-- [ ] Respect `upload.enabled` config flag
-- [ ] `--dry-run`: show what would be uploaded without uploading
+- [x] Upload system prompt file
+- [x] `--model` flag
+- [x] Respect `upload.enabled` config flag
+- [x] `--dry-run`: show what would be uploaded without uploading
 
 **Dependencies:** WU-9 (wants eval results for the model card, though could run without)  
 **Open questions / flags:** None
@@ -287,6 +287,7 @@
 - [ ] Clear step headers, summaries, elapsed time
 - [ ] Error reporting with fix suggestions
 - [ ] Steps: 2, 3, 3b, 4, 5, 6, 7, 8, 9, 10 (step 1/setup is manual, not orchestrated)
+- [ ] Step 10, to upload to HF should always need an explicit and standalone call to run_pipeline to prevent against accidental uploads
 
 **Dependencies:** All other WUs (this calls them)  
 **Open questions / flags:** None
