@@ -129,15 +129,15 @@
 
 ---
 
-### WU-5: `05_download_models.py`
+### WU-5: `05_download_models.py` ✅
 **Spec sections:** `05_download_models.py` (lines 425–432)  
 **Deliverables:**
-- [ ] Download base HF models to `models/base/{model_name}/`
-- [ ] On Linux: also download Unsloth variant
-- [ ] Verify by loading tokenizer + quick test generation
-- [ ] Log model sizes, parameter counts
-- [ ] Skip if already downloaded (idempotent)
-- [ ] `--model` flag to download specific model
+- [x] Download base HF models to `models/base/{model_name}/`
+- [x] On Linux: also download Unsloth variant
+- [x] Verify by loading tokenizer + quick test generation
+- [x] Log model sizes, parameter counts
+- [x] Skip if already downloaded (idempotent)
+- [x] `--model` flag to download specific model
 
 **Dependencies:** WU-0  
 **Open questions / flags:** None
