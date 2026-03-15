@@ -175,19 +175,24 @@
 
 ---
 
-### WU-7: `07_fuse_and_convert.py`
+### WU-7: `07_fuse_and_convert.py` ✅
 **Spec sections:** `07_fuse_and_convert.py` (lines 538–566)  
 **Deliverables:**
-- [ ] **Linux path:** `model.save_pretrained_merged(save_method="merged_16bit")`
-  - Then `mlx_lm.convert` HF → MLX format (to `models/mlx/{model_name}`)
-- [ ] **Mac path:** `mlx_lm.fuse` (produces MLX format directly to `models/fused/{model_name}`)
-- [ ] Verify output directory has expected files (config.json, safetensors, tokenizer files)
-- [ ] Log: input/output paths, model size
+- [x] **Linux path:** `model.save_pretrained_merged(save_method="merged_16bit")`
+  - Then `mlx_lm.convert` HF → MLX format (to `models/mlx/{model_name}`) via `--convert-only`
+- [x] **Mac path:** `mlx_lm.fuse` (produces MLX format directly to `models/fused/{model_name}`)
+- [x] Verify output directory has expected files (config.json, safetensors, tokenizer files)
+- [x] Log: input/output paths, model size
+- [x] `--convert-only` flag for cross-platform workflow (Linux→Mac)
+- [x] `--de-quantize` / `--no-de-quantize` flag (BooleanOptionalAction, default True)
+- [x] Preflight checks for required packages (unsloth/mlx_lm)
+- [x] Partial output cleanup on failure (prevents false skips on reruns)
+- [x] Validates existing output before skipping (not just dir existence)
 
 **Dependencies:** WU-6  
 **Open questions / flags:**
-1. **Linux→MLX conversion on Mac.** If fine-tuned on Linux, the fused HF model must be transferred to Mac for `mlx_lm.convert`. The script should detect this and either: (a) run the conversion if on Mac, or (b) print instructions to transfer and convert. I'll handle both cases.
-2. **`--de-quantize` flag on `mlx_lm.fuse`.** This is only needed if the base model was quantized. Since we train at full precision on both platforms, this flag may not be needed (or may be harmless). I'll include it as shown in the spec.
+1. ~~**Linux→MLX conversion on Mac.** If fine-tuned on Linux, the fused HF model must be transferred to Mac for `mlx_lm.convert`. The script should detect this and either: (a) run the conversion if on Mac, or (b) print instructions to transfer and convert. I'll handle both cases.~~ **Resolved:** Both paths implemented — `--convert-only` for Mac conversion, and instructions printed after Linux fuse.
+2. ~~**`--de-quantize` flag on `mlx_lm.fuse`.** This is only needed if the base model was quantized. Since we train at full precision on both platforms, this flag may not be needed (or may be harmless). I'll include it as shown in the spec.~~ **Resolved:** Included with `--no-de-quantize` opt-out.
 
 ---
 

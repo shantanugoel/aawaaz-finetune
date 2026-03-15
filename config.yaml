@@ -66,9 +66,9 @@ dataset:
       reject_threshold: 0.70      # If <70% pass, reject entire category and flag for prompt revision
       # Between 70-90%: accept but log warning, suggest manual review
       provider: "openai_compatible"
-      model: "kimi-k2.5:cloud"   # Different model family avoids self-preference bias
-      api_key_env: "OLLAMA_UNUSED"
-      base_url: "http://localhost:11434/v1"
+      model: "moonshotai/kimi-k2.5"   # Different model family avoids self-preference bias
+      api_key_env: "OPENROUTER_API_KEY"
+      base_url: "https://openrouter.ai/api/v1"
   # Split ratios
   train_ratio: 0.90
   valid_ratio: 0.05
