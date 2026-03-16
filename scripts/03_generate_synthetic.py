@@ -40,97 +40,220 @@ CATEGORY_GUIDANCE: dict[str, str] = {
         "weekend plans, stories about what happened, recommendations. "
         "Use contractions heavily, informal language, sometimes trailing off mid-thought. "
         "The transcript should sound like someone rambling to a friend — lots of 'like', "
-        "'you know', 'so basically', changes of topic. "
-        "The OUTPUT must STILL properly format this: add punctuation, fix grammar, remove "
-        "ALL fillers. Casual content does NOT mean casual formatting. The output should be "
-        "clean, readable text even if the content is informal."
+        "'you know', 'so basically', changes of topic.\n\n"
+        "OUTPUT RULES (CRITICAL — this category fails on cleanup quality):\n"
+        "The output must aggressively remove ALL filler words with zero exceptions:\n"
+        "- Remove: um, uh, like (when used as filler, NOT as 'such as' or 'similar to'), "
+        "basically, actually, you know, so (at sentence starts), I mean, honestly, literally, "
+        "right, okay so, oh my god, seriously, oh wait\n"
+        "- Remove: 'and like', 'but like', 'so like', 'like seriously', 'like honestly'\n"
+        "- Remove: trailing 'and stuff', 'and everything', 'and all that'\n"
+        "- Casual content does NOT mean casual formatting — output must have clean punctuation "
+        "and proper sentences even though the topic is informal\n"
+        "- Do NOT drop substantive emotional content ('I'm so excited' should stay, but "
+        "'oh my god I'm like so excited' becomes 'I'm so excited')"
     ),
     "email_professional": (
-        "Someone DICTATING a business email out loud. They say things like 'dear mister smith' "
-        "or 'hi team comma', 'new paragraph', 'kind regards'. The transcript should sound like "
-        "someone talking their email out, not like a typed email with ums added. "
-        "Include salutations, sign-offs, and professional language but spoken naturally. "
-        "Numbers should be spoken: 'the budget is twelve thousand five hundred dollars'. "
+        "Someone DICTATING a business email out loud — talking through what they want to write, "
+        "NOT reading a pre-written email. They think out loud, hesitate on wording, change "
+        "their mind about phrasing.\n\n"
+        "TRANSCRIPT MUST sound like DICTATION, not a formatted email with ums:\n"
+        "- BAD: 'Dear Mr. Smith, um, I am writing to inform you that the budget has been approved.'\n"
+        "  (This is a typed email with one filler — NO real person dictates this cleanly)\n"
+        "- GOOD: 'okay so uh dear mister smith comma new paragraph I wanted to let you know that "
+        "uh the budget got approved so the the number was um twelve thousand five hundred and uh "
+        "we should be good to go from here new paragraph kind regards'\n"
+        "  (This sounds like someone talking through their email, thinking as they go)\n\n"
+        "Key patterns: spoken punctuation ('comma', 'period', 'new paragraph'), numbers as words "
+        "('twelve thousand five hundred' not '$12,500'), no consistent capitalization, "
+        "run-on structure where they're composing on the fly.\n"
         "The OUTPUT should be a properly formatted email with correct salutations, paragraph "
         "breaks, and formatted numbers ($12,500)."
     ),
     "technical_code": (
-        "Dictating code, CLI commands, error messages, or technical documentation. "
-        "Include function names ('def process underscore data'), file paths "
-        "('slash user slash bin slash app'), docker commands, SQL queries, variable names. "
-        "The speaker might spell out symbols: 'open paren', 'close bracket', 'equals equals'. "
+        "Someone dictating code, CLI commands, error messages, or technical docs OUT LOUD. "
+        "They're speaking to a transcription system, not typing.\n\n"
+        "TRANSCRIPT REALISM (this category fails because inputs look too structured):\n"
+        "- BAD: 'The function processData() takes two arguments: input_file and output_dir.'\n"
+        "  (This is written documentation with no speech characteristics)\n"
+        "- GOOD: 'so the function is um process underscore data and it takes two arguments "
+        "uh the first one is input underscore file and then output underscore dir'\n\n"
+        "Key patterns:\n"
+        "- Spell out symbols: 'open paren', 'close bracket', 'equals equals', 'hash', "
+        "'forward slash', 'underscore', 'dash dash'\n"
+        "- File paths spoken out: 'slash user slash local slash bin slash python three'\n"
+        "- Variable/function names spoken with underscores: 'get underscore user underscore by "
+        "underscore id'\n"
+        "- Code is described haltingly with pauses and restarts, NOT rattled off fluently\n"
+        "- Numbers as words: 'port eight zero eight zero' not 'port 8080'\n\n"
         "The OUTPUT should have properly formatted code with actual symbols, file paths, etc. "
         "CRITICAL: Do NOT hallucinate code details — if the speaker said 'import react', "
         "do NOT expand it to 'import React from \"react\"' unless they specifically said that."
     ),
     "medical_clinical": (
-        "Dictating patient notes, clinical observations, medication names and dosages, "
-        "lab results, diagnoses. Include medical abbreviations spoken out "
-        "('b p one twenty over eighty', 'patient presented with shortness of breath'). "
-        "The OUTPUT should format these correctly (BP: 120/80, SOB) while preserving EVERY "
-        "clinical detail. Missing a dosage or lab value is a critical failure."
+        "A clinician DICTATING patient notes out loud, thinking through their observations. "
+        "NOT reading from a chart — speaking from memory/observation.\n\n"
+        "TRANSCRIPT REALISM (this category fails because inputs are too structured/clinical):\n"
+        "- BAD: 'Patient presents with shortness of breath. BP: 120/80. Prescribed metformin 500mg.'\n"
+        "  (This is a written chart note, not speech)\n"
+        "- GOOD: 'okay so the patient uh came in with shortness of breath and um the b p was "
+        "one twenty over eighty and I'm gonna put them on uh metformin five hundred milligrams "
+        "twice daily'\n\n"
+        "Key patterns:\n"
+        "- Abbreviations spoken out fully: 'b p' not 'BP', 'c t scan' not 'CT scan'\n"
+        "- Numbers as spoken words: 'one twenty over eighty' not '120/80'\n"
+        "- Dosages spoken: 'five hundred milligrams' not '500mg'\n"
+        "- Casual clinical speech: 'gonna put them on', 'looks like', 'so basically the labs came back'\n"
+        "- Thinking out loud: 'let me think what else... oh yeah the hemoglobin was'\n\n"
+        "The OUTPUT should format these correctly (BP: 120/80, metformin 500 mg BID) while "
+        "preserving EVERY clinical detail. Missing a dosage or lab value is a critical failure."
     ),
     "legal_contract": (
-        "Dictating contract clauses, legal terminology, section references. "
-        "Include formal legal phrasing spoken naturally: 'whereas the party of the first part', "
-        "'section four point two', 'hereinafter referred to as'. "
+        "A lawyer DICTATING contract language, working through clause wording out loud. "
+        "They know the legal terms but are composing/reviewing verbally.\n\n"
+        "TRANSCRIPT REALISM (this category fails because inputs read like written contracts):\n"
+        "- BAD: 'Whereas the Party of the First Part agrees to the terms set forth in Section 4.2...'\n"
+        "  (This is a typed contract with perfect formatting)\n"
+        "- GOOD: 'okay so um whereas the party of the first part uh agrees to the terms set "
+        "forth in section four point two and uh this includes all the indemnification stuff "
+        "from the previous um the previous version'\n\n"
+        "Key patterns:\n"
+        "- Section numbers spoken: 'section four point two' not 'Section 4.2'\n"
+        "- Asides and thinking: 'let me get the wording right here', 'so the clause should say'\n"
+        "- Informal speech MIXED with formal legal terms: 'so the indemnification stuff basically says'\n"
+        "- No consistent capitalization of legal terms in transcript\n"
+        "- Numbers as words: 'thirty days' not '30 days'\n\n"
         "The OUTPUT must preserve EVERY legal term, section number, party name, and clause "
         "exactly. Do NOT paraphrase or simplify legal language — keep it verbatim minus fillers. "
         "Do NOT add 'for clarity' explanations or restructure clauses."
     ),
     "meeting_notes": (
-        "Someone dictating meeting minutes or action items. Include attendee names, "
-        "deadlines ('by next friday', 'end of q two'), decisions made, who is responsible. "
+        "Someone dictating meeting notes AFTER a meeting, recalling what happened, or "
+        "speaking during the meeting to capture action items. They're recalling from memory, "
+        "jumping between topics.\n\n"
+        "TRANSCRIPT REALISM:\n"
+        "- BAD: 'Meeting attendees: John, Sarah, Mike. Agenda item 1: Q2 budget review.'\n"
+        "  (This is written minutes, not speech)\n"
+        "- GOOD: 'so the meeting was with uh john and sarah and mike was there too and um "
+        "first we talked about the q two budget and john said uh we need to cut like fifteen "
+        "percent from the marketing spend'\n\n"
+        "Key patterns:\n"
+        "- Stream of consciousness recall: 'oh and I forgot to mention', 'what else... right'\n"
+        "- Names without capitalization in transcript\n"
+        "- Dates/deadlines spoken: 'by next friday', 'end of q two', 'march fifteenth'\n"
+        "- Action items emerge naturally: 'so sarah's gonna handle that' not 'Action: Sarah'\n\n"
         "The OUTPUT should be well-structured meeting notes with bullet points or numbered "
         "items. Preserve EVERY name, date, action item, and decision."
     ),
     "recipe_cooking": (
-        "Dictating recipes or cooking instructions. Ingredient quantities spoken as words "
-        "('two cups of flour', 'three hundred fifty degrees'). Step-by-step with natural "
-        "speech: 'then you wanna let it sit for like twenty minutes'. "
+        "Someone dictating a recipe from memory or while cooking — casual, instructional, "
+        "sometimes distracted.\n\n"
+        "TRANSCRIPT REALISM:\n"
+        "- BAD: 'Ingredients: 2 cups flour, 1 tsp salt. Step 1: Preheat oven to 350°F.'\n"
+        "  (This is a written recipe card)\n"
+        "- GOOD: 'okay so you're gonna need um two cups of flour and uh a teaspoon of salt "
+        "and then preheat your oven to like three fifty and uh while that's heating up you "
+        "wanna mix the dry ingredients'\n\n"
+        "Key patterns:\n"
+        "- Quantities as spoken words: 'two cups', 'a teaspoon', 'three fifty'\n"
+        "- Conversational instruction: 'you wanna', 'go ahead and', 'what I usually do is'\n"
+        "- Tangents: 'oh and make sure your butter is room temp that's important'\n"
+        "- Time as words: 'twenty minutes', 'about an hour'\n\n"
         "The OUTPUT should have a properly formatted ingredients list and numbered steps "
         "with all quantities converted to written form (2 cups, 350°F, 20 minutes)."
     ),
     "academic_research": (
-        "Dictating research notes, paper summaries, citations, methodology descriptions. "
-        "Include author names, journal titles, years, statistical values spoken as words "
-        "('p less than point oh five', 'n equals forty two'). "
-        "The OUTPUT should format citations, statistics (p < 0.05, n = 42), and technical "
-        "terms properly. Preserve every author name, statistic, and finding exactly."
+        "A researcher TALKING through their notes, literature review, or findings — dictating "
+        "to capture ideas, NOT reading from a polished paper.\n\n"
+        "TRANSCRIPT REALISM (this category fails badly because inputs look like written papers):\n"
+        "- BAD: 'The study by Chen and Rodriguez (2023) examined machine learning applications...'\n"
+        "  (This is a written citation — formatted year, proper punctuation, polished prose)\n"
+        "- GOOD: 'so um that paper by chen and rodriguez from uh twenty twenty three looked at "
+        "machine learning applications in healthcare and they found uh the sample size was like "
+        "n equals forty two and the p value was less than point oh five'\n\n"
+        "Key patterns:\n"
+        "- Years spoken as words: 'twenty twenty three' not '2023'\n"
+        "- Statistics spoken out: 'n equals forty two', 'p less than point oh five', "
+        "'r squared was like point eight three'\n"
+        "- Informal academic talk: 'they basically found that', 'the methodology was um'\n"
+        "- No parenthetical citations — just spoken: 'that paper by chen and rodriguez'\n"
+        "- Thinking through: 'wait what was the sample size... I think it was forty two'\n\n"
+        "The OUTPUT should format citations (Chen & Rodriguez, 2023), statistics (p < 0.05, "
+        "n = 42), and technical terms properly. Preserve every author name, statistic, and "
+        "finding exactly."
     ),
     "creative_writing": (
-        "Dictating stories, poems, blog posts, personal essays, or journal entries. "
-        "Include descriptive language, dialogue (said with 'quote' / 'end quote' or "
-        "'open quote'), and natural pauses or direction changes. "
+        "Someone DICTATING a story, poem, blog post, or journal entry — speaking their creative "
+        "ideas aloud as they compose. They are THINKING and CREATING verbally, not reading "
+        "finished prose.\n\n"
+        "TRANSCRIPT REALISM (this is the WORST category — 76% of inputs fail because they sound "
+        "like written prose, not dictation):\n"
+        "- BAD: 'She walked into the room and the light was like gold spilling across the floor.'\n"
+        "  (This is finished prose with one filler word — it reads like a book, not speech)\n"
+        "- BAD: 'The forest was ancient and the trees whispered secrets if you listened carefully.'\n"
+        "  (Beautiful writing, but no one speaks this fluently while composing)\n"
+        "- GOOD: 'okay so she walks into the room and um the light is I want to say like golden "
+        "you know like spilling across the the wooden floor and he's just sitting there waiting "
+        "for her and uh he looks up and smiles or no he looks up and like their eyes meet'\n"
+        "- GOOD: 'so for this next part um I'm thinking the forest is really old like ancient and "
+        "the trees kind of uh what's the word whisper I guess the trees whisper secrets to you if "
+        "you actually listen like stories about the people who used to live here'\n\n"
+        "Key patterns that make creative dictation REALISTIC:\n"
+        "- Writer thinking about word choices: 'I want to say', 'what's the word', 'how do I put this'\n"
+        "- Composing in real-time: tense shifts (present then past), trying different phrasings\n"
+        "- Direction changes: 'actually no let me start this part differently'\n"
+        "- Spoken formatting: 'new paragraph', 'open quote', 'end quote'\n"
+        "- NOT literary/poetic in the transcript — the beauty comes in the OUTPUT after cleanup\n"
+        "- Messy sentence boundaries — ideas flow into each other without clean stops\n\n"
         "The OUTPUT should format dialogue with quotation marks, add proper paragraph "
-        "breaks, and clean up prose while preserving the writer's voice and every detail. "
-        "Remove ALL fillers even if they feel like part of the writing style — they are "
-        "from the dictation process, not the content."
+        "breaks, and clean up prose while preserving the writer's voice and every detail."
     ),
     "financial_business": (
-        "Dictating financial reports, budget summaries, invoice details, or business plans. "
-        "Include dollar amounts ('twelve hundred dollars'), percentages ('fifteen percent'), "
-        "dates ('q three twenty twenty five'), company names. "
+        "Someone TALKING through financial figures — reviewing a report verbally, dictating "
+        "an analysis, or discussing numbers in a call.\n\n"
+        "TRANSCRIPT REALISM (this category fails because inputs have pre-formatted numbers):\n"
+        "- BAD: 'The acquisition cost for the new property is $8.5 million with a 15% ROI.'\n"
+        "  (This is a written report — formatted currency, percentages, abbreviations)\n"
+        "- GOOD: 'so the uh acquisition cost for the new property was eight point five million "
+        "dollars and the return on investment is looking like about fifteen percent which is "
+        "um actually pretty good for this market'\n\n"
+        "Key patterns:\n"
+        "- Dollar amounts spoken: 'twelve hundred dollars', 'eight point five million'\n"
+        "- Percentages spoken: 'fifteen percent' not '15%'\n"
+        "- Quarters spoken: 'q three twenty twenty five', 'third quarter'\n"
+        "- Abbreviations spoken: 'return on investment' or 'r o i' not 'ROI'\n"
+        "- Casual financial talk: 'the numbers look pretty good', 'we're a bit over budget'\n\n"
         "The OUTPUT must format all numbers correctly ($1,200, 15%, Q3 2025) and preserve "
         "every financial figure exactly."
     ),
     "shopping_lists": (
-        "Dictating a shopping or to-do list quickly. Items in rapid succession, sometimes "
-        "with quantities ('like three avocados', 'a dozen eggs'), brands, or notes. Often "
-        "short and list-oriented. "
+        "Dictating a shopping or to-do list quickly — rapid-fire items, sometimes with "
+        "quantities, brands, or notes. Speaker is usually walking around or checking the "
+        "fridge/pantry.\n\n"
+        "Key patterns:\n"
+        "- Items rattled off: 'milk eggs bread and oh we need butter too'\n"
+        "- Quantities as words: 'like three avocados', 'a dozen eggs'\n"
+        "- Afterthoughts: 'oh and get the organic kind', 'wait do we have rice... no get rice'\n"
+        "- Brands/specifics: 'the kirkland one', 'get the unsalted butter'\n\n"
         "The OUTPUT should be a clean bulleted or numbered list with formatted quantities."
     ),
     "self_corrections_heavy": (
-        "Focus heavily on self-correction patterns. The speaker frequently changes their mind: "
-        "'the meeting is at two pm wait no three pm', "
-        "'send it to john at gmail no actually his work email', "
-        "'we need five hundred units scratch that make it six hundred'. "
-        "Include multiple corrections per example. Mix corrections of: names, numbers, dates, "
-        "instructions, and facts. "
-        "The OUTPUT must apply ALL corrections correctly — keep ONLY the final corrected "
-        "version. If the speaker said 'tuesday no wednesday', output Wednesday. "
-        "Do NOT include both wrong and right versions. Do NOT add notes like 'corrected from'. "
-        "Preserve all non-corrected content exactly."
+        "Focus heavily on self-correction patterns. The speaker frequently changes their mind "
+        "mid-sentence.\n\n"
+        "Include MULTIPLE corrections per example — at least 2-3 per transcript. Mix different "
+        "correction patterns:\n"
+        "- Number corrections: 'the meeting is at two pm wait no three pm'\n"
+        "- Name corrections: 'send it to john no actually send it to sarah'\n"
+        "- Fact corrections: 'it was on tuesday or wait no it was wednesday'\n"
+        "- Phrasing corrections: 'we need to cancel the uh no not cancel just postpone'\n"
+        "- Instruction corrections: 'put it in the blue folder wait the red one'\n\n"
+        "CRITICAL for OUTPUT:\n"
+        "- Keep ONLY the final corrected version of each correction\n"
+        "- If speaker said 'tuesday no wednesday', output only Wednesday\n"
+        "- Do NOT include both versions or any correction markers\n"
+        "- Do NOT add notes like 'corrected from'\n"
+        "- Preserve ALL non-corrected content exactly — do NOT accidentally drop surrounding "
+        "facts when applying corrections"
     ),
 }
 
@@ -142,51 +265,77 @@ Generate {batch_size} realistic input/output pairs for the category: {category}.
 
 ## RULES FOR THE "transcript" FIELD (the messy input)
 
-The transcript must look like real output from a modern speech-to-text engine (like Whisper). \
-Whisper output characteristics:
-- MAY have SOME punctuation (periods, commas) but it is often inconsistent — sometimes present, sometimes missing within the same transcript
-- MAY have SOME capitalization — proper nouns are often capitalized, sentence starts may or may not be
-- Numbers are USUALLY spelled out as words ("twenty five", "two thousand") but Whisper sometimes outputs digits for common numbers
-- No paragraph breaks — everything runs together as one or a few long blocks of text
-- Filler words (um, uh, like, basically, actually, you know, so, I mean) placed where real people hesitate
-- Self-corrections ("the meeting is on Tuesday wait no Wednesday")
-- Spoken formatting cues where natural ("new line", "bullet point", "colon", "dash")
-- Run-on sentences where the speaker's natural pauses are not reflected as punctuation
-- NOT every sentence has fillers — vary the messiness naturally, some stretches are clean
+The transcript must look like REAL output from Whisper (a modern speech-to-text engine) \
+transcribing someone who is SPEAKING NATURALLY.
 
-CRITICAL — DO NOT:
-- Generate perfectly clean text with a few "um"s inserted — that is fake and obvious
-- Use perfectly consistent formatting throughout (real speech transcription varies in quality)
-- Add fillers mechanically at regular intervals
+### What makes a transcript REALISTIC vs FAKE
 
-DO:
-- Vary quality throughout — some parts more coherent, others messier
-- Place fillers where people actually hesitate (before complex words, when changing topics, when uncertain)
-- Include natural speech patterns: false starts, topic changes, backtracking
-- Make it sound like someone SPEAKING, not someone TYPING
+FAKE (will be rejected — sounds like written text with fillers inserted):
+- "The patient presents with shortness of breath. Um, blood pressure is 120/80."
+  → Why fake: Perfect sentence structure, formatted numbers, consistent punctuation, \
+one mechanical filler
+- "She walked into the room and the light was like gold spilling across the floor."
+  → Why fake: This is polished prose, not how someone speaks while composing
+- "Dear Mr. Smith, I am writing to inform you that the Q3 budget has been approved."
+  → Why fake: This is a typed email, not someone dictating
+
+REALISTIC (will pass — sounds like someone actually talking):
+- "so the patient uh came in with shortness of breath and the b p was one twenty \
+over eighty and I'm gonna I'm thinking we put them on metformin"
+  → Why real: Spoken numbers, casual phrasing, false start, inconsistent flow
+- "okay so she walks into the room and um the light is like I want to say golden \
+you know spilling across the the wooden floor and he's just sitting there"
+  → Why real: Thinking out loud, tense shifts, stutter, composing in real-time
+- "okay uh dear mister smith comma new paragraph so I wanted to let you know the \
+q three budget got approved the number was uh twelve thousand five hundred"
+  → Why real: Spoken punctuation, numbers as words, thinking as they compose
+
+### Whisper transcription characteristics:
+- SOME punctuation (periods, commas) but INCONSISTENT — present in some sentences, \
+missing in others. Never perfectly uniform.
+- SOME capitalization — proper nouns often capitalized, but sentence-start caps are \
+hit-or-miss. Never consistently perfect.
+- Numbers ALMOST ALWAYS as spoken words: "twenty five", "two thousand", "one twenty \
+over eighty". Whisper rarely outputs formatted numbers like "$12,500" or "120/80".
+- NO paragraph breaks — everything runs together as one block
+- Filler words placed where humans ACTUALLY hesitate: before complex words, when \
+changing topics, when uncertain about next words. NOT at regular intervals.
+- Run-on sentences — ideas flow into each other without clean stops
+- NOT every sentence has fillers — some stretches are clean, others are messy
+
+### The ONE test your transcript must pass:
+Read it aloud. Does it sound like a real person talking? If it sounds like someone \
+reading from a well-written document, it is FAKE. Rewrite it.
 
 ## RULES FOR THE "output" FIELD (the clean version)
 
 The output is what the cleanup model should produce. It must:
-- Remove ALL fillers and stutters completely
+- Remove ALL fillers and stutters with ZERO exceptions (um, uh, like [as filler], \
+basically, actually, you know, so [at sentence starts], I mean, honestly, literally, \
+okay so, right, and stuff, and everything)
 - Apply self-corrections (keep ONLY the corrected version, drop the mistake entirely)
 - Add proper, consistent punctuation and capitalization throughout
 - Convert spoken numbers/dates/currency to written form ($500, January 15, 2025)
 - Apply proper formatting (bullet lists, paragraphs, code blocks) where the speaker indicated them
 - Convert spoken emoji descriptions to actual emoji characters
+- Convert spoken punctuation cues to actual punctuation ("comma" → ,  "new paragraph" → ¶)
 
 CRITICAL:
-- Preserve EVERY substantive fact, name, number, and instruction from the input — do NOT drop or summarize anything
+- Preserve EVERY substantive fact, name, number, and instruction from the input \
+— do NOT drop or summarize anything
 - Only REMOVE noise (fillers, stutters, corrections) and ADD formatting (punctuation, structure)
 - Do NOT add information, context, conclusions, or clarifications the speaker did not say
 - Do NOT rephrase in your own words — preserve the speaker's wording minus the noise
+- Be THOROUGH with cleanup — every filler removed, every number formatted, every \
+self-correction resolved. Incomplete cleanup will be rejected.
 
 ## Category-specific guidance for "{category}":
 {category_guidance}
 
 ## Response format
 Respond with a JSON array of objects, each with "transcript" and "output" keys. No other text.
-Vary the length: some short (1-2 sentences, ~15-30 words), some medium (paragraph, ~50-100 words), some long (multiple paragraphs, ~150-300 words)."""
+Vary the length: some short (1-2 sentences, ~15-30 words), some medium (paragraph, ~50-100 words), \
+some long (multiple paragraphs, ~150-300 words)."""
 
 # ── Messify prompt for clean→messy mode ────────────────────────────────────
 
@@ -194,16 +343,33 @@ MESSIFY_PROMPT = """\
 Convert these {batch_size} clean, well-formatted texts into realistic speech-to-text (ASR) \
 transcripts, as if someone SPOKE this content aloud and it was transcribed by Whisper.
 
-For each text, produce a realistic transcript that:
-- Sounds like natural speech with fillers (um, uh, like, you know, basically) placed where \
-people actually hesitate
-- Has inconsistent punctuation — some present, some missing
-- Has some capitalization but not perfectly consistent
-- Numbers mostly as spoken words ("twenty five" not "25")
-- Run-on sentences, natural topic transitions
-- Self-corrections where natural ("wait no I meant", "actually scratch that")
-- Spoken formatting cues where the original has structure ("bullet point", "new line")
-- Varies the messiness — not every sentence needs fillers
+### What REALISTIC ASR transcription sounds like:
+The output should sound like someone TALKING, not someone reading a document aloud. \
+People who dictate content think as they speak — they hesitate, restart, use filler words, \
+and their formatting is messy.
+
+FAKE (do NOT produce this):
+"The quarterly revenue was $2.5 million, um, representing a 15% increase over Q2."
+→ Why: formatted numbers, perfect punctuation, one mechanical filler
+
+REALISTIC (produce this):
+"so the quarterly revenue was uh two point five million dollars which is like a fifteen \
+percent increase over q two and that's um actually pretty solid"
+→ Why: spoken numbers, natural fillers, casual phrasing, run-on structure
+
+### Key transformation rules:
+- Convert ALL formatted numbers to spoken words: "$2,500" → "twenty five hundred dollars", \
+"15%" → "fifteen percent", "2023" → "twenty twenty three", "120/80" → "one twenty over eighty"
+- REMOVE all consistent punctuation patterns — add some back inconsistently (a period here, \
+a comma there, but NOT on every sentence)
+- REMOVE paragraph breaks — everything becomes one continuous block
+- ADD filler words where people naturally hesitate (NOT at regular intervals):
+  - Before complex terms: "the uh indemnification clause"
+  - When changing topics: "so um anyway the next thing"
+  - When thinking: "I think it was like forty two or wait yeah forty two"
+- ADD natural speech patterns: false starts, self-corrections, run-on sentences, topic restarts
+- VARY the messiness — some sentences cleaner, others much messier
+- Capitalization should be inconsistent — some proper nouns capped, some not
 
 CRITICAL: Include ALL content from the original — do not drop facts, names, or details.
 
