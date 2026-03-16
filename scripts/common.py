@@ -515,16 +515,26 @@ def setup_logging(verbose: bool = False) -> logging.Logger:
     """Configure the root logger and return the ``aawaaz`` logger.
 
     Logs go to *stderr* so stdout remains available for data output.
+    When *verbose* is True, only the ``aawaaz`` hierarchy is set to DEBUG;
+    third-party libraries (httpx, openai, urllib3, etc.) stay at WARNING
+    to avoid noisy HTTP-level debug output.
     """
-    level = logging.DEBUG if verbose else logging.INFO
     logging.basicConfig(
-        level=level,
+        level=logging.INFO,
         format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
         datefmt="%H:%M:%S",
         stream=sys.stderr,
         force=True,
     )
-    return logging.getLogger("aawaaz")
+    app_logger = logging.getLogger("aawaaz")
+    if verbose:
+        app_logger.setLevel(logging.DEBUG)
+
+    # Silence chatty third-party loggers even in verbose mode
+    for noisy in ("httpx", "httpcore", "openai", "urllib3", "anthropic"):
+        logging.getLogger(noisy).setLevel(logging.WARNING)
+
+    return app_logger
 
 
 # ── System prompt helper ───────────────────────────────────────────────────

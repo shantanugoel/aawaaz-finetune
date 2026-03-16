@@ -34,7 +34,7 @@ dataset:
     enabled: true
     num_samples: 5000           # How many synthetic pairs to generate
     provider: "openai_compatible"
-    model: "minimax/minimax-m2.5" # Best JSON/structured output accuracy (HumanEval 92%, SWE-Bench 80.2%)
+    model: "anthropic/claude-sonnet-4.6" # Best JSON/structured output accuracy (HumanEval 92%, SWE-Bench 80.2%)
     # api_key_env: "OLLAMA_UNUSED" # Required by OpenAI SDK but ignored by Ollama
     # base_url: "http://localhost:11434/v1"
     api_key_env: "OPENROUTER_API_KEY"
@@ -78,7 +78,7 @@ dataset:
       reject_threshold: 0.70      # If <70% pass, reject entire category and flag for prompt revision
       # Between 70-90%: accept but log warning, suggest manual review
       provider: "openai_compatible"
-      model: "moonshotai/kimi-k2.5"   # Different model family avoids self-preference bias
+      model: "openai/gpt-5.4"   # Different model family avoids self-preference bias
       api_key_env: "OPENROUTER_API_KEY"
       base_url: "https://openrouter.ai/api/v1"
   # Split ratios
