@@ -2,18 +2,28 @@
 
 Fine-tune Qwen3 models (0.6B and 1.7B) for speech transcript cleanup, producing 4-bit quantized MLX models for on-device inference in [aawaaz](https://github.com/shantanugoel/aawaaz).
 
+The pipeline cleans messy ASR (automatic speech recognition) output — removing filler words, fixing grammar, correcting self-corrections, and formatting — while preserving the speaker's original meaning.
+
 ## Quickstart
+
+### Prerequisites
+
+- **Python 3.11+** and [**uv**](https://docs.astral.sh/uv/) (package manager)
+- **Linux**: NVIDIA GPU with CUDA support
+- **Mac**: Apple Silicon (M1+)
+- **HuggingFace account** (for dataset download and model upload)
+- **LLM API key** for synthetic data generation (OpenAI, Anthropic, or any OpenAI-compatible provider like OpenRouter)
 
 ### 1. Setup
 
 ```bash
-# Clone and enter the project
 git clone <this-repo>
 cd aawaaz-finetune
 
-# Run setup (auto-detects platform, creates venv, installs deps)
+# Run setup — auto-detects platform, creates venv, installs deps
 chmod +x scripts/01_setup.sh
-./scripts/01_setup.sh            # or: ./scripts/01_setup.sh --platform mac
+./scripts/01_setup.sh              # auto-detect
+./scripts/01_setup.sh --platform mac   # or force platform
 
 # Activate the virtual environment
 source .venv/bin/activate
@@ -21,65 +31,126 @@ source .venv/bin/activate
 
 ### 2. Configure
 
-Edit `config.yaml` to set:
-- `platform`: `"linux"` (Unsloth/CUDA) or `"mac"` (MLX)
-- `hf_username`: your HuggingFace username
-- `dataset.synthetic.api_key_env`: name of the env var holding your API key
-- Model toggles, hyperparameters, etc.
+Edit `config.yaml`:
 
-### 3. Run the pipeline
+```yaml
+platform: "mac"                          # "linux" or "mac"
+hf_username: "your-username"             # HuggingFace username
+
+dataset:
+  synthetic:
+    provider: "openai_compatible"        # "anthropic", "openai", or "openai_compatible"
+    model: "google/gemini-2.5-flash"     # Model to use for generation
+    api_key_env: "OPENROUTER_API_KEY"    # Env var holding your API key
+    base_url: "https://openrouter.ai/api/v1"  # Only for openai_compatible
+```
+
+Set the API key in your environment:
+```bash
+export OPENROUTER_API_KEY="sk-..."       # Or whichever provider you chose
+```
+
+See `config.yaml` for all available options (model toggles, hyperparameters, training settings, etc.).
+
+### 3. Run the Pipeline
 
 ```bash
-# Run everything end-to-end
+# Run everything end-to-end (steps 2–9, excludes upload)
 python scripts/run_pipeline.py --all
 
-# Or run specific steps
+# Run specific steps
 python scripts/run_pipeline.py --steps 2,3,3b,4       # Data prep only
 python scripts/run_pipeline.py --steps 6               # Fine-tuning only
 python scripts/run_pipeline.py --steps 7,8,9           # Fuse → quantize → eval
 
-# Override config values
+# Target a specific model
 python scripts/run_pipeline.py --steps 6 --model qwen3-0.6b
+
+# Override config values
 python scripts/run_pipeline.py --steps 3 --synthetic-samples 10000
 
-# Dry run
+# Preview what would run (no side effects)
 python scripts/run_pipeline.py --all --dry-run
+
+# Resume after interruption (skips completed steps)
+python scripts/run_pipeline.py --all --resume
+
+# Upload to HuggingFace (must be run explicitly)
+python scripts/run_pipeline.py --steps 10
 ```
+
+### 4. Run Scripts Individually
+
+Every script can also be run standalone:
+
+```bash
+python scripts/02_pull_datasets.py --verbose
+python scripts/03_generate_synthetic.py --dry-run --synthetic-samples 100
+python scripts/06_finetune.py --model qwen3-0.6b --verbose
+```
+
+All scripts support `--verbose`, `--dry-run`, and `--config <path>` flags.
 
 ## Pipeline Steps
 
-| Step | Script | Description |
+| Step | Script | What it does |
 |------|--------|-------------|
-| 2 | `02_pull_datasets.py` | Download existing datasets from HuggingFace |
-| 3 | `03_generate_synthetic.py` | Generate synthetic training data via LLM API |
-| 3b | `03b_validate_synthetic.py` | LLM-as-judge quality validation |
-| 4 | `04_prepare_data.py` | Combine, format, and split into train/valid/test |
-| 5 | `05_download_models.py` | Download base Qwen3 models |
-| 6 | `06_finetune.py` | LoRA fine-tuning (MLX or Unsloth/HF) |
+| 1 | `01_setup.sh` | Create venv, install dependencies (run manually) |
+| 2 | `02_pull_datasets.py` | Download transcript cleanup datasets from HuggingFace |
+| 3 | `03_generate_synthetic.py` | Generate synthetic training pairs via LLM API |
+| 3b | `03b_validate_synthetic.py` | LLM-as-judge quality gate on synthetic data |
+| 4 | `04_prepare_data.py` | Combine, deduplicate, format, and split into train/valid/test |
+| 5 | `05_download_models.py` | Download base Qwen3 models from HuggingFace |
+| 6 | `06_finetune.py` | LoRA fine-tuning (Unsloth on Linux, MLX on Mac) |
 | 7 | `07_fuse_and_convert.py` | Fuse LoRA adapters into base model |
 | 8 | `08_quantize.py` | Quantize to 4-bit MLX format |
-| 9 | `09_evaluate.py` | Evaluate on test set |
-| 10 | `10_upload.py` | Upload to HuggingFace Hub |
+| 9 | `09_evaluate.py` | Evaluate on test set (CER, BLEU, exact match, format accuracy) |
+| 10 | `10_upload.py` | Upload quantized model to HuggingFace Hub |
 
 ## Project Structure
 
 ```
 aawaaz-finetune/
-├── config.yaml                  # Central configuration
-├── prompts/system_prompt.txt    # System prompt for training & inference
-├── scripts/                     # All pipeline scripts
-├── data/                        # Raw, synthetic, and prepared datasets
-├── models/                      # Base, adapter, fused, and quantized models
-└── eval_results/                # Evaluation outputs
+├── config.yaml                  # All pipeline configuration
+├── prompts/system_prompt.txt    # System prompt used in training & inference
+├── scripts/
+│   ├── 01_setup.sh              # Environment setup
+│   ├── 02–10_*.py               # Pipeline step scripts
+│   ├── run_pipeline.py          # Orchestrator
+│   ├── common.py                # Shared utilities (config, logging, CLI)
+│   └── llm_client.py            # Multi-provider LLM client
+├── data/
+│   ├── raw/                     # Downloaded HF datasets
+│   ├── synthetic/               # Generated + validated synthetic data
+│   └── combined/                # Final train/valid/test splits
+├── models/
+│   ├── base/                    # Downloaded base models
+│   ├── adapters/                # LoRA adapters from fine-tuning
+│   ├── fused/                   # Merged full models (Mac)
+│   ├── mlx/                     # Converted MLX models (Linux→Mac)
+│   └── quantized/               # Final 4-bit quantized models
+├── eval_results/                # Evaluation reports and metrics
+└── docs/
+    └── aawaaz-finetune-spec.md  # Full specification
 ```
 
 ## Platforms
 
-- **Linux (Unsloth/CUDA)**: Faster fine-tuning with NVIDIA GPU. Uses Unsloth + HF Transformers.
-- **Mac (MLX)**: Fine-tuning on Apple Silicon. Uses MLX-LM.
+| | Linux | Mac |
+|---|---|---|
+| **Fine-tuning** | Unsloth + HuggingFace Transformers (CUDA) | MLX-LM LoRA |
+| **Quantization** | — (transfer to Mac) | MLX-LM convert |
+| **Final output** | 4-bit quantized MLX model | 4-bit quantized MLX model |
 
-Both produce the same final output: a 4-bit quantized MLX model.
+**Cross-platform workflow**: Fine-tune on Linux (faster with NVIDIA GPU), then transfer the fused model to Mac for quantization and evaluation. Use `--convert-only` in step 7 on Mac to convert a Linux-fused model to MLX format.
+
+## Key Design Decisions
+
+- **Qwen3 thinking mode disabled** — All scripts pass `enable_thinking=False` and the training data includes `/no_think` in the system prompt. Any `<think>` tags in output are stripped and logged as warnings.
+- **Prompt masking** — Loss is computed only on the assistant's response, not the system prompt or user input.
+- **Idempotent** — Re-running any script skips already-completed work. Use `--force` to override.
+- **Incremental saves** — Long-running steps (synthetic generation, training) save progress so crashes don't lose work.
 
 ## Details
 
-See [`docs/aawaaz-finetune-spec.md`](docs/aawaaz-finetune-spec.md) for the full specification.
+See [`docs/aawaaz-finetune-spec.md`](docs/aawaaz-finetune-spec.md) for the full specification and [`docs/plan.md`](docs/plan.md) for implementation notes.
