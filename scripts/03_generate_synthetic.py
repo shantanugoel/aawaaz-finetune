@@ -36,92 +36,486 @@ logger = logging.getLogger("aawaaz.generate_synthetic")
 
 CATEGORY_GUIDANCE: dict[str, str] = {
     "casual_conversation": (
-        "Friend-to-friend messages, voice notes, casual updates. "
-        "Use contractions, informal language, sometimes trailing off."
+        "Friend-to-friend voice messages, voice notes about daily life, casual updates about "
+        "weekend plans, stories about what happened, recommendations. "
+        "Use contractions heavily, informal language, sometimes trailing off mid-thought. "
+        "The transcript should sound like someone rambling to a friend — lots of 'like', "
+        "'you know', 'so basically', changes of topic. "
+        "The OUTPUT must STILL properly format this: add punctuation, fix grammar, remove "
+        "ALL fillers. Casual content does NOT mean casual formatting. The output should be "
+        "clean, readable text even if the content is informal."
     ),
     "email_professional": (
-        'Dictating business emails. Include "dear", "regards", salutations. '
-        "Formal tone but spoken casually."
+        "Someone DICTATING a business email out loud. They say things like 'dear mister smith' "
+        "or 'hi team comma', 'new paragraph', 'kind regards'. The transcript should sound like "
+        "someone talking their email out, not like a typed email with ums added. "
+        "Include salutations, sign-offs, and professional language but spoken naturally. "
+        "Numbers should be spoken: 'the budget is twelve thousand five hundred dollars'. "
+        "The OUTPUT should be a properly formatted email with correct salutations, paragraph "
+        "breaks, and formatted numbers ($12,500)."
     ),
     "technical_code": (
-        "Dictating code, CLI commands, error messages, technical docs. "
-        "Include function names, file paths, docker commands, SQL queries, "
-        "variable names with underscores/camelCase."
+        "Dictating code, CLI commands, error messages, or technical documentation. "
+        "Include function names ('def process underscore data'), file paths "
+        "('slash user slash bin slash app'), docker commands, SQL queries, variable names. "
+        "The speaker might spell out symbols: 'open paren', 'close bracket', 'equals equals'. "
+        "The OUTPUT should have properly formatted code with actual symbols, file paths, etc. "
+        "CRITICAL: Do NOT hallucinate code details — if the speaker said 'import react', "
+        "do NOT expand it to 'import React from \"react\"' unless they specifically said that."
     ),
     "medical_clinical": (
-        "Patient notes, clinical observations, medication names, dosages, "
-        "medical abbreviations."
+        "Dictating patient notes, clinical observations, medication names and dosages, "
+        "lab results, diagnoses. Include medical abbreviations spoken out "
+        "('b p one twenty over eighty', 'patient presented with shortness of breath'). "
+        "The OUTPUT should format these correctly (BP: 120/80, SOB) while preserving EVERY "
+        "clinical detail. Missing a dosage or lab value is a critical failure."
     ),
     "legal_contract": (
-        "Contract clauses, legal terminology, article/section references, "
-        "formal language."
+        "Dictating contract clauses, legal terminology, section references. "
+        "Include formal legal phrasing spoken naturally: 'whereas the party of the first part', "
+        "'section four point two', 'hereinafter referred to as'. "
+        "The OUTPUT must preserve EVERY legal term, section number, party name, and clause "
+        "exactly. Do NOT paraphrase or simplify legal language — keep it verbatim minus fillers. "
+        "Do NOT add 'for clarity' explanations or restructure clauses."
     ),
     "meeting_notes": (
-        "Action items, attendee names, deadlines, decisions made."
+        "Someone dictating meeting minutes or action items. Include attendee names, "
+        "deadlines ('by next friday', 'end of q two'), decisions made, who is responsible. "
+        "The OUTPUT should be well-structured meeting notes with bullet points or numbered "
+        "items. Preserve EVERY name, date, action item, and decision."
     ),
     "recipe_cooking": (
-        "Dictating recipes or cooking instructions. Include ingredient "
-        "quantities spoken as words, cooking times, temperatures, step-by-step "
-        "directions with natural speech patterns."
+        "Dictating recipes or cooking instructions. Ingredient quantities spoken as words "
+        "('two cups of flour', 'three hundred fifty degrees'). Step-by-step with natural "
+        "speech: 'then you wanna let it sit for like twenty minutes'. "
+        "The OUTPUT should have a properly formatted ingredients list and numbered steps "
+        "with all quantities converted to written form (2 cups, 350°F, 20 minutes)."
     ),
     "academic_research": (
-        "Dictating research notes, paper abstracts, citations, methodology "
-        "descriptions. Include author names, journal titles, statistical "
-        "figures spoken as words, and technical terminology."
+        "Dictating research notes, paper summaries, citations, methodology descriptions. "
+        "Include author names, journal titles, years, statistical values spoken as words "
+        "('p less than point oh five', 'n equals forty two'). "
+        "The OUTPUT should format citations, statistics (p < 0.05, n = 42), and technical "
+        "terms properly. Preserve every author name, statistic, and finding exactly."
     ),
     "creative_writing": (
-        "Dictating stories, poems, blog posts, or journal entries. Include "
-        "descriptive language, dialogue, and natural pauses or changes of "
-        "thought mid-sentence."
+        "Dictating stories, poems, blog posts, personal essays, or journal entries. "
+        "Include descriptive language, dialogue (said with 'quote' / 'end quote' or "
+        "'open quote'), and natural pauses or direction changes. "
+        "The OUTPUT should format dialogue with quotation marks, add proper paragraph "
+        "breaks, and clean up prose while preserving the writer's voice and every detail. "
+        "Remove ALL fillers even if they feel like part of the writing style — they are "
+        "from the dictation process, not the content."
     ),
     "financial_business": (
-        "Dictating financial reports, budget notes, invoice details, or "
-        "business plans. Include currency amounts, percentages, dates, and "
-        "company names spoken naturally."
+        "Dictating financial reports, budget summaries, invoice details, or business plans. "
+        "Include dollar amounts ('twelve hundred dollars'), percentages ('fifteen percent'), "
+        "dates ('q three twenty twenty five'), company names. "
+        "The OUTPUT must format all numbers correctly ($1,200, 15%, Q3 2025) and preserve "
+        "every financial figure exactly."
     ),
     "shopping_lists": (
-        "Dictating shopping or to-do lists. Items spoken in quick succession, "
-        "sometimes with quantities, brands, or notes. Often very short and "
-        "list-oriented."
+        "Dictating a shopping or to-do list quickly. Items in rapid succession, sometimes "
+        "with quantities ('like three avocados', 'a dozen eggs'), brands, or notes. Often "
+        "short and list-oriented. "
+        "The OUTPUT should be a clean bulleted or numbered list with formatted quantities."
     ),
     "self_corrections_heavy": (
-        'Specifically focus on self-correction patterns: "wait", "no", '
-        '"scratch that", "actually I meant", "let me rephrase", "correction". '
-        "Multiple corrections per example. This category is crucial for quality."
+        "Focus heavily on self-correction patterns. The speaker frequently changes their mind: "
+        "'the meeting is at two pm wait no three pm', "
+        "'send it to john at gmail no actually his work email', "
+        "'we need five hundred units scratch that make it six hundred'. "
+        "Include multiple corrections per example. Mix corrections of: names, numbers, dates, "
+        "instructions, and facts. "
+        "The OUTPUT must apply ALL corrections correctly — keep ONLY the final corrected "
+        "version. If the speaker said 'tuesday no wednesday', output Wednesday. "
+        "Do NOT include both wrong and right versions. Do NOT add notes like 'corrected from'. "
+        "Preserve all non-corrected content exactly."
     ),
 }
 
 # ── Generation prompt template ─────────────────────────────────────────────
 
 GENERATION_PROMPT = """\
-Generate {batch_size} realistic speech-to-text transcript pairs for the category: {category}.
+You are generating training data for a speech transcript cleanup model. \
+Generate {batch_size} realistic input/output pairs for the category: {category}.
 
-For each pair, create:
-1. A "transcript" — what a speech-to-text engine (like Whisper) would output from someone speaking naturally. This should include:
-   - Filler words (um, uh, like, basically, actually, you know, so, I mean) placed naturally
-   - No punctuation or very minimal/wrong punctuation
-   - Numbers, dates, and currency spoken as words (e.g., "two thousand twenty five" not "2025")
-   - Occasional self-corrections (e.g., "the meeting is on Tuesday wait no Wednesday")
-   - Spoken formatting cues where natural (e.g., "colon", "new line", "bullet point", "dash")
-   - Run-on sentences with no clear breaks
-   - Some spoken technical terms, code syntax, URLs spelled out
-   - Occasional spoken emoji descriptions (e.g., "thumbs up emoji")
-   - Realistic speech patterns — not every sentence has fillers, vary the messiness
+## RULES FOR THE "transcript" FIELD (the messy input)
 
-2. An "output" — the clean, properly formatted version that preserves ALL substantive content but:
-   - Removes all fillers and stutters
-   - Applies self-corrections (only keeps the corrected version)
-   - Has proper punctuation, capitalization, and grammar
-   - Numbers, dates, currency in written form ($500, January 15, 2025)
-   - Proper formatting (bullet lists, paragraphs, code formatting)
-   - Emoji characters where described
-   - No content added or removed
+The transcript must look like real output from a modern speech-to-text engine (like Whisper). \
+Whisper output characteristics:
+- MAY have SOME punctuation (periods, commas) but it is often inconsistent — sometimes present, sometimes missing within the same transcript
+- MAY have SOME capitalization — proper nouns are often capitalized, sentence starts may or may not be
+- Numbers are USUALLY spelled out as words ("twenty five", "two thousand") but Whisper sometimes outputs digits for common numbers
+- No paragraph breaks — everything runs together as one or a few long blocks of text
+- Filler words (um, uh, like, basically, actually, you know, so, I mean) placed where real people hesitate
+- Self-corrections ("the meeting is on Tuesday wait no Wednesday")
+- Spoken formatting cues where natural ("new line", "bullet point", "colon", "dash")
+- Run-on sentences where the speaker's natural pauses are not reflected as punctuation
+- NOT every sentence has fillers — vary the messiness naturally, some stretches are clean
 
-Category-specific guidance for "{category}":
+CRITICAL — DO NOT:
+- Generate perfectly clean text with a few "um"s inserted — that is fake and obvious
+- Use perfectly consistent formatting throughout (real speech transcription varies in quality)
+- Add fillers mechanically at regular intervals
+
+DO:
+- Vary quality throughout — some parts more coherent, others messier
+- Place fillers where people actually hesitate (before complex words, when changing topics, when uncertain)
+- Include natural speech patterns: false starts, topic changes, backtracking
+- Make it sound like someone SPEAKING, not someone TYPING
+
+## RULES FOR THE "output" FIELD (the clean version)
+
+The output is what the cleanup model should produce. It must:
+- Remove ALL fillers and stutters completely
+- Apply self-corrections (keep ONLY the corrected version, drop the mistake entirely)
+- Add proper, consistent punctuation and capitalization throughout
+- Convert spoken numbers/dates/currency to written form ($500, January 15, 2025)
+- Apply proper formatting (bullet lists, paragraphs, code blocks) where the speaker indicated them
+- Convert spoken emoji descriptions to actual emoji characters
+
+CRITICAL:
+- Preserve EVERY substantive fact, name, number, and instruction from the input — do NOT drop or summarize anything
+- Only REMOVE noise (fillers, stutters, corrections) and ADD formatting (punctuation, structure)
+- Do NOT add information, context, conclusions, or clarifications the speaker did not say
+- Do NOT rephrase in your own words — preserve the speaker's wording minus the noise
+
+## Category-specific guidance for "{category}":
 {category_guidance}
 
+## Response format
 Respond with a JSON array of objects, each with "transcript" and "output" keys. No other text.
-Vary the length: some short (1-2 sentences), some medium (paragraph), some long (multiple paragraphs)."""
+Vary the length: some short (1-2 sentences, ~15-30 words), some medium (paragraph, ~50-100 words), some long (multiple paragraphs, ~150-300 words)."""
+
+# ── Messify prompt for clean→messy mode ────────────────────────────────────
+
+MESSIFY_PROMPT = """\
+Convert these {batch_size} clean, well-formatted texts into realistic speech-to-text (ASR) \
+transcripts, as if someone SPOKE this content aloud and it was transcribed by Whisper.
+
+For each text, produce a realistic transcript that:
+- Sounds like natural speech with fillers (um, uh, like, you know, basically) placed where \
+people actually hesitate
+- Has inconsistent punctuation — some present, some missing
+- Has some capitalization but not perfectly consistent
+- Numbers mostly as spoken words ("twenty five" not "25")
+- Run-on sentences, natural topic transitions
+- Self-corrections where natural ("wait no I meant", "actually scratch that")
+- Spoken formatting cues where the original has structure ("bullet point", "new line")
+- Varies the messiness — not every sentence needs fillers
+
+CRITICAL: Include ALL content from the original — do not drop facts, names, or details.
+
+Category context: "{category}" — {category_guidance}
+
+CLEAN TEXTS:
+{numbered_texts}
+
+Respond with a JSON array of {batch_size} objects, each with a "transcript" key \
+containing ONLY the messy version. Same order as input. No other text."""
+
+# Categories that work well with clean→messy (have natural source text in datasets)
+CLEAN_TO_MESSY_CATEGORIES = {
+    "medical_clinical",
+    "legal_contract",
+    "technical_code",
+    "academic_research",
+    "financial_business",
+    "recipe_cooking",
+    "meeting_notes",
+    "email_professional",
+    "creative_writing",
+}
+
+# Keywords for categorizing text from generic datasets
+CATEGORY_KEYWORDS: dict[str, list[str]] = {
+    "medical_clinical": [
+        "patient", "diagnosis", "clinical", "medication", "dosage", "symptom",
+        "treatment", "hospital", "surgery", "prescription", "disease", "therapy",
+    ],
+    "legal_contract": [
+        "contract", "agreement", "clause", "hereby", "whereas", "provision",
+        "indemnif", "liability", "jurisdiction", "arbitration", "statute",
+    ],
+    "technical_code": [
+        "function", "variable", "algorithm", "database", "server", "compile",
+        "debug", "software", "programming", "API", "framework", "deploy",
+    ],
+    "academic_research": [
+        "research", "study", "hypothesis", "methodology", "findings",
+        "journal", "experiment", "analysis", "university", "published",
+    ],
+    "financial_business": [
+        "revenue", "budget", "fiscal", "investment", "quarterly", "profit",
+        "dividend", "financial", "accounting", "market", "stock",
+    ],
+    "recipe_cooking": [
+        "recipe", "ingredient", "tablespoon", "teaspoon", "preheat", "oven",
+        "simmer", "bake", "cook", "stir", "cuisine", "dish",
+    ],
+    "meeting_notes": [
+        "meeting", "agenda", "minutes", "action item", "attendee", "discuss",
+        "decided", "follow-up", "deadline", "committee", "board",
+    ],
+    "email_professional": [
+        "dear", "regards", "sincerely", "attached", "forwarding", "subject",
+        "memo", "correspondence", "notify",
+    ],
+    "creative_writing": [
+        "story", "character", "narrative", "novel", "poem", "fiction",
+        "protagonist", "literary", "author", "chapter",
+    ],
+}
+
+
+def categorize_text(text: str) -> str | None:
+    """Assign a category to clean text based on keyword matching.
+
+    Returns the best-matching category or None if no keywords match.
+    """
+    text_lower = text.lower()
+    best_category: str | None = None
+    best_score = 0
+
+    for category, keywords in CATEGORY_KEYWORDS.items():
+        score = sum(1 for kw in keywords if kw.lower() in text_lower)
+        if score > best_score:
+            best_score = score
+            best_category = category
+
+    # Require at least 2 keyword matches to avoid weak categorization
+    return best_category if best_score >= 2 else None
+
+
+def load_clean_texts(
+    source: Any,
+    max_samples: int,
+    verbose: bool = False,
+) -> list[dict[str, str]]:
+    """Load and categorize clean texts from a HuggingFace dataset.
+
+    Returns a list of dicts with 'text' and 'category' keys.
+    """
+    try:
+        from datasets import load_dataset
+    except ImportError:
+        logger.error(
+            "The 'datasets' package is required for clean_to_messy mode. "
+            "Install it with: pip install datasets"
+        )
+        return []
+
+    logger.info(
+        "Loading clean text dataset: %s (subset: %s)",
+        source.dataset,
+        source.subset,
+    )
+
+    try:
+        ds = load_dataset(
+            source.dataset,
+            source.subset,
+            split="train",
+            streaming=True,
+        )
+    except Exception as exc:
+        logger.error("Failed to load dataset '%s': %s", source.dataset, exc)
+        return []
+
+    categorized: list[dict[str, str]] = []
+    seen = 0
+    max_scan = max_samples * 20  # Scan more texts than needed to find categorizable ones
+
+    for item in ds:
+        if seen >= max_scan or len(categorized) >= max_samples:
+            break
+        seen += 1
+
+        text = item.get(source.text_column, "")
+        if not isinstance(text, str):
+            continue
+
+        # For Wikipedia, extract a single paragraph (not whole article)
+        paragraphs = [
+            p.strip()
+            for p in text.split("\n\n")
+            if source.min_text_length <= len(p.strip()) <= source.max_text_length
+        ]
+        if not paragraphs:
+            continue
+
+        # Use first suitable paragraph
+        para = paragraphs[0]
+        category = categorize_text(para)
+        if category and category in CLEAN_TO_MESSY_CATEGORIES:
+            categorized.append({"text": para, "category": category})
+
+        if verbose and seen % 1000 == 0:
+            logger.debug(
+                "Scanned %d texts, categorized %d so far", seen, len(categorized)
+            )
+
+    logger.info(
+        "Loaded %d categorized texts from %d scanned", len(categorized), seen
+    )
+
+    # Log distribution
+    from collections import Counter
+    dist = Counter(item["category"] for item in categorized)
+    for cat, count in sorted(dist.items()):
+        logger.info("  %s: %d texts", cat, count)
+
+    return categorized
+
+
+def messify_batch(
+    client: LLMClient,
+    texts: list[str],
+    category: str,
+) -> list[str]:
+    """Convert a batch of clean texts to messy transcripts via LLM.
+
+    Returns list of messy transcript strings.
+    """
+    guidance = CATEGORY_GUIDANCE.get(category, "General content.")
+    numbered = "\n".join(
+        f"{i+1}. {text}" for i, text in enumerate(texts)
+    )
+
+    prompt = MESSIFY_PROMPT.format(
+        batch_size=len(texts),
+        category=category,
+        category_guidance=guidance,
+        numbered_texts=numbered,
+    )
+
+    messages = [{"role": "user", "content": prompt}]
+    raw_response = client.generate(messages, max_tokens=8192, temperature=1.0)
+
+    parsed = parse_llm_response(raw_response)
+    transcripts: list[str] = []
+    for item in parsed:
+        if isinstance(item, dict) and "transcript" in item:
+            transcripts.append(item["transcript"])
+
+    return transcripts
+
+
+def generate_clean_to_messy(
+    client: LLMClient,
+    synth: Any,
+    dry_run: bool = False,
+    verbose: bool = False,
+) -> dict[str, dict[str, int]]:
+    """Run the clean→messy generation mode.
+
+    Loads clean text from the configured dataset, categorizes it, and
+    generates messy transcript versions via LLM.
+
+    Returns per-category stats.
+    """
+    source = synth.clean_text_source
+    stats: dict[str, dict[str, int]] = {}
+
+    clean_texts = load_clean_texts(source, source.max_samples, verbose)
+    if not clean_texts:
+        logger.warning("No clean texts loaded — skipping clean_to_messy mode")
+        return stats
+
+    # Group by category
+    by_category: dict[str, list[str]] = {}
+    for item in clean_texts:
+        by_category.setdefault(item["category"], []).append(item["text"])
+
+    if dry_run:
+        logger.info("")
+        logger.info("=== DRY RUN — Clean→Messy Plan ===")
+        logger.info("Dataset: %s (%s)", source.dataset, source.subset)
+        logger.info("Total categorized texts: %d", len(clean_texts))
+        logger.info("")
+        logger.info("%-25s %8s %8s", "Category", "Texts", "Batches")
+        logger.info("-" * 45)
+        for cat in sorted(by_category):
+            n = len(by_category[cat])
+            batches = math.ceil(n / synth.batch_size)
+            logger.info("%-25s %8d %8d", cat, n, batches)
+        logger.info("-" * 45)
+        return stats
+
+    try:
+        from tqdm import tqdm
+    except ImportError:
+        tqdm = None  # type: ignore[assignment]
+
+    for category, texts in by_category.items():
+        cat_stats = {
+            "generated": 0,
+            "failed_batches": 0,
+            "rejected_pairs": 0,
+            "total_parsed": 0,
+        }
+        out_path = category_output_path(category)
+
+        logger.info(
+            "Clean→messy '%s': messifying %d texts", category, len(texts)
+        )
+
+        pbar = None
+        if tqdm is not None:
+            pbar = tqdm(
+                total=len(texts),
+                desc=f"  {category} (c2m)",
+                unit="pair",
+                leave=True,
+            )
+
+        for batch_start in range(0, len(texts), synth.batch_size):
+            batch_texts = texts[batch_start : batch_start + synth.batch_size]
+            try:
+                messy_transcripts = messify_batch(client, batch_texts, category)
+                cat_stats["total_parsed"] += len(messy_transcripts)
+
+                # Pair up: transcript=messy, output=original clean text
+                pairs: list[dict[str, str]] = []
+                for clean_text, messy in zip(batch_texts, messy_transcripts):
+                    pair = {"transcript": messy, "output": clean_text}
+                    reason = validate_pair(pair, category)
+                    if reason:
+                        logger.debug(
+                            "Rejected c2m pair in '%s': %s", category, reason
+                        )
+                        cat_stats["rejected_pairs"] += 1
+                    else:
+                        pairs.append(pair)
+
+                if pairs:
+                    append_pairs(out_path, pairs, category)
+                    cat_stats["generated"] += len(pairs)
+                    if pbar:
+                        pbar.update(len(pairs))
+
+            except (RuntimeError, ValueError) as exc:
+                logger.error("C2M batch for '%s' failed: %s", category, exc)
+                cat_stats["failed_batches"] += 1
+
+            # Rate limit
+            time.sleep(0.5)
+
+        if pbar:
+            pbar.close()
+
+        logger.info(
+            "Clean→messy '%s' done: generated=%d, rejected=%d, failed=%d",
+            category,
+            cat_stats["generated"],
+            cat_stats["rejected_pairs"],
+            cat_stats["failed_batches"],
+        )
+        stats[category] = cat_stats
+
+    return stats
+
 
 # ── Pair validation ────────────────────────────────────────────────────────
 
@@ -616,35 +1010,78 @@ def main() -> int:
 
     # ── Dry-run output ────────────────────────────────────────────────────
     if args.dry_run:
-        cost = estimate_cost(synth, total_samples)
+        modes = synth.generation_modes
         log.info("=== DRY RUN — Generation Plan ===")
         log.info("Provider: %s | Model: %s", synth.provider, synth.model)
-        log.info("Total samples: %d | Batch size: %d", total_samples, synth.batch_size)
-        log.info("")
-        log.info("%-25s %8s %8s %8s %8s", "Category", "Target", "Existing", "Remaining", "Batches")
-        log.info("-" * 65)
-        total_remaining = 0
-        total_batches = 0
-        for entry in plan:
+        log.info(
+            "Modes: generate_both=%s, clean_to_messy=%s",
+            modes.generate_both,
+            modes.clean_to_messy,
+        )
+
+        if not modes.generate_both and not modes.clean_to_messy:
             log.info(
-                "%-25s %8d %8d %8d %8d",
-                entry["category"],
-                entry["target"],
-                entry["existing"],
-                entry["remaining"],
-                entry["num_batches"],
+                "Both generation modes disabled — "
+                "pipeline will use only pre-pulled datasets from step 02."
             )
-            total_remaining += entry["remaining"]
-            total_batches += entry["num_batches"]
-        log.info("-" * 65)
-        log.info("%-25s %8s %8s %8d %8d", "TOTAL", "", "", total_remaining, total_batches)
-        log.info("")
-        log.info("Estimated cost: $%.2f", cost["est_cost_usd"])
-        log.info("  %s", cost["pricing_note"])
+            return 0
+
+        if modes.generate_both:
+            cost = estimate_cost(synth, total_samples)
+            log.info("")
+            log.info("--- Generate-Both Mode ---")
+            log.info("Total samples: %d | Batch size: %d", total_samples, synth.batch_size)
+            log.info("")
+            log.info("%-25s %8s %8s %8s %8s", "Category", "Target", "Existing", "Remaining", "Batches")
+            log.info("-" * 65)
+            total_remaining = 0
+            total_batches = 0
+            for entry in plan:
+                log.info(
+                    "%-25s %8d %8d %8d %8d",
+                    entry["category"],
+                    entry["target"],
+                    entry["existing"],
+                    entry["remaining"],
+                    entry["num_batches"],
+                )
+                total_remaining += entry["remaining"]
+                total_batches += entry["num_batches"]
+            log.info("-" * 65)
+            log.info("%-25s %8s %8s %8d %8d", "TOTAL", "", "", total_remaining, total_batches)
+            log.info("")
+            log.info("Estimated cost: $%.2f", cost["est_cost_usd"])
+            log.info("  %s", cost["pricing_note"])
+
+        if modes.clean_to_messy:
+            log.info("")
+            log.info("--- Clean→Messy Mode ---")
+            src = synth.clean_text_source
+            log.info("Dataset: %s (%s)", src.dataset, src.subset)
+            log.info("Max samples: %d", src.max_samples)
+            log.info(
+                "Text length filter: %d-%d chars",
+                src.min_text_length,
+                src.max_text_length,
+            )
+            log.info(
+                "Eligible categories: %s",
+                ", ".join(sorted(CLEAN_TO_MESSY_CATEGORIES)),
+            )
+            log.info("(Dataset will be loaded and categorized during real run)")
+
         return 0
 
     # ── Real run ──────────────────────────────────────────────────────────
     ensure_dirs()
+    modes = synth.generation_modes
+
+    if not modes.generate_both and not modes.clean_to_messy:
+        log.info(
+            "Both generation modes disabled — "
+            "pipeline will use only pre-pulled datasets from step 02."
+        )
+        return 0
 
     # Handle --force: remove existing per-category files
     if args.force:
@@ -671,20 +1108,40 @@ def main() -> int:
         log.error("Failed to create LLM client: %s", exc)
         return 1
 
-    # ── Generate per category ─────────────────────────────────────────────
+    # ── Generate-both mode ────────────────────────────────────────────────
     start_time = time.monotonic()
     all_stats: dict[str, dict[str, int]] = {}
 
-    for entry in plan:
-        category = entry["category"]
-        cat_stats = generate_category(
+    if modes.generate_both:
+        log.info("")
+        log.info("=== Running Generate-Both Mode ===")
+        for entry in plan:
+            category = entry["category"]
+            cat_stats = generate_category(
+                client=client,
+                category=category,
+                plan_entry=entry,
+                synth=synth,
+                dry_run=False,
+            )
+            all_stats[category] = cat_stats
+    else:
+        log.info("Generate-both mode disabled, skipping.")
+
+    # ── Clean→messy mode ──────────────────────────────────────────────────
+    c2m_stats: dict[str, dict[str, int]] = {}
+
+    if modes.clean_to_messy:
+        log.info("")
+        log.info("=== Running Clean→Messy Mode ===")
+        c2m_stats = generate_clean_to_messy(
             client=client,
-            category=category,
-            plan_entry=entry,
             synth=synth,
             dry_run=False,
+            verbose=args.verbose,
         )
-        all_stats[category] = cat_stats
+    else:
+        log.info("Clean-to-messy mode disabled, skipping.")
 
     # ── Build combined output ─────────────────────────────────────────────
     all_categories = list(synth.categories.keys())
@@ -695,25 +1152,36 @@ def main() -> int:
     total_generated = sum(s["generated"] for s in all_stats.values())
     total_rejected = sum(s["rejected_pairs"] for s in all_stats.values())
     total_failed = sum(s["failed_batches"] for s in all_stats.values())
+    c2m_generated = sum(s["generated"] for s in c2m_stats.values())
+    c2m_rejected = sum(s["rejected_pairs"] for s in c2m_stats.values())
+    c2m_failed = sum(s["failed_batches"] for s in c2m_stats.values())
 
     log.info("")
     log.info("=== Generation Summary ===")
     log.info("Elapsed: %.1fs", elapsed)
-    log.info("Total generated: %d", total_generated)
-    log.info("Total rejected pairs: %d", total_rejected)
-    log.info("Total failed batches: %d", total_failed)
+
+    if modes.generate_both:
+        log.info("")
+        log.info("Generate-Both: %d generated, %d rejected, %d failed batches",
+                 total_generated, total_rejected, total_failed)
+    if modes.clean_to_messy:
+        log.info("Clean→Messy:   %d generated, %d rejected, %d failed batches",
+                 c2m_generated, c2m_rejected, c2m_failed)
+
+    log.info("Grand total:   %d pairs", total_generated + c2m_generated)
     log.info("Combined file: %d records", combined_count)
     log.info("")
     log.info("%-25s %10s %10s %10s", "Category", "Generated", "Rejected", "Failed")
     log.info("-" * 60)
     for category in all_categories:
-        s = all_stats.get(category, {"generated": 0, "rejected_pairs": 0, "failed_batches": 0})
+        g = all_stats.get(category, {"generated": 0, "rejected_pairs": 0, "failed_batches": 0})
+        c = c2m_stats.get(category, {"generated": 0, "rejected_pairs": 0, "failed_batches": 0})
         log.info(
             "%-25s %10d %10d %10d",
             category,
-            s["generated"],
-            s["rejected_pairs"],
-            s["failed_batches"],
+            g["generated"] + c["generated"],
+            g["rejected_pairs"] + c["rejected_pairs"],
+            g["failed_batches"] + c["failed_batches"],
         )
     log.info("-" * 60)
 

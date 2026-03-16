@@ -34,9 +34,11 @@ dataset:
     enabled: true
     num_samples: 5000           # How many synthetic pairs to generate
     provider: "openai_compatible"
-    model: "minimax-m2.5:cloud" # Best JSON/structured output accuracy (HumanEval 92%, SWE-Bench 80.2%)
-    api_key_env: "OLLAMA_UNUSED" # Required by OpenAI SDK but ignored by Ollama
-    base_url: "http://localhost:11434/v1"
+    model: "minimax/minimax-m2.5" # Best JSON/structured output accuracy (HumanEval 92%, SWE-Bench 80.2%)
+    # api_key_env: "OLLAMA_UNUSED" # Required by OpenAI SDK but ignored by Ollama
+    # base_url: "http://localhost:11434/v1"
+    api_key_env: "OPENROUTER_API_KEY"
+    base_url: "https://openrouter.ai/api/v1"
     # Alternatives (uncomment to switch):
     #   model: "kimi-k2.5:cloud"    # Best for multimodal/large context
     #   model: "glm-5:cloud"        # Strong reasoning, open-source
@@ -45,6 +47,16 @@ dataset:
     #   model: "claude-sonnet-4-20250514"
     #   api_key_env: "ANTHROPIC_API_KEY"
     batch_size: 25              # Pairs per API call
+    generation_modes:           # Which generation approaches to use
+      generate_both: true       # Generate messy+clean together (current approach)
+      clean_to_messy: true      # Take clean text from dataset and generate messy version
+    clean_text_source:          # Source of clean text for clean_to_messy mode
+      dataset: "wikimedia/wikipedia"
+      subset: "20231101.en"
+      text_column: "text"
+      max_samples: 2500         # How many clean→messy pairs to generate (additive to num_samples)
+      min_text_length: 100      # Skip texts shorter than this (chars)
+      max_text_length: 2000     # Skip texts longer than this (chars)
     categories:                 # Distribution of synthetic data
       casual_conversation: 0.15
       email_professional: 0.12

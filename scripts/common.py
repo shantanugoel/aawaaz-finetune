@@ -90,6 +90,22 @@ class ValidationConfig:
 
 
 @dataclass
+class GenerationModesConfig:
+    generate_both: bool = True
+    clean_to_messy: bool = True
+
+
+@dataclass
+class CleanTextSourceConfig:
+    dataset: str = "wikimedia/wikipedia"
+    subset: str = "20231101.en"
+    text_column: str = "text"
+    max_samples: int = 2500
+    min_text_length: int = 100
+    max_text_length: int = 2000
+
+
+@dataclass
 class SyntheticConfig:
     enabled: bool = True
     num_samples: int = 5000
@@ -100,6 +116,12 @@ class SyntheticConfig:
     batch_size: int = 25
     categories: dict[str, float] = field(default_factory=dict)
     validation: ValidationConfig = field(default_factory=ValidationConfig)
+    generation_modes: GenerationModesConfig = field(
+        default_factory=GenerationModesConfig
+    )
+    clean_text_source: CleanTextSourceConfig = field(
+        default_factory=CleanTextSourceConfig
+    )
 
 
 @dataclass
@@ -277,7 +299,19 @@ def load_config(path: Path | str | None = None) -> PipelineConfig:
     synth_raw = dict(ds_raw.get("synthetic", {}))  # copy to avoid mutating raw
     val_raw = synth_raw.pop("validation", {})
     validation = _build_nested(ValidationConfig, val_raw)
-    synthetic = _build_nested(SyntheticConfig, {**synth_raw, "validation": validation})
+    gen_modes_raw = synth_raw.pop("generation_modes", {})
+    gen_modes = _build_nested(GenerationModesConfig, gen_modes_raw)
+    clean_src_raw = synth_raw.pop("clean_text_source", {})
+    clean_src = _build_nested(CleanTextSourceConfig, clean_src_raw)
+    synthetic = _build_nested(
+        SyntheticConfig,
+        {
+            **synth_raw,
+            "validation": validation,
+            "generation_modes": gen_modes,
+            "clean_text_source": clean_src,
+        },
+    )
     dataset = _build_nested(
         DatasetConfig,
         {**ds_raw, "hf_datasets": hf_datasets, "synthetic": synthetic},

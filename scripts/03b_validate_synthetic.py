@@ -57,7 +57,7 @@ SUMMARY_PATH = DATA_SYNTHETIC / "validation_summary.txt"
 
 JUDGE_PROMPT = """\
 You are evaluating a synthetic training pair for a speech transcript cleanup model.
-Your job is to ensure the training data is high quality. Be strict.
+Your job is to ensure the training data is high quality. Be strict but fair.
 
 INPUT (raw transcript):
 {transcript}
@@ -67,13 +67,16 @@ OUTPUT (cleaned text):
 
 Score this pair on 4 criteria. Answer ONLY with a JSON object, no other text.
 
-1. "input_realistic": Is the input realistic raw ASR output? It should have:
-   - Little to NO punctuation and NO capitalization (or only accidental/minimal)
-   - Numbers, dates, and currency as spoken words (e.g., "five hundred" not "500")
-   - Natural filler words placed organically (not "um" mechanically inserted every 5 words)
-   - Run-on sentences without clear boundaries
-   FAIL if it looks like already-clean text with a few "um"s sprinkled in.
-   FAIL if it has proper punctuation, capitalization throughout, or formatted numbers.
+1. "input_realistic": Is the input realistic speech-to-text (ASR) output?
+   Modern ASR like Whisper MAY produce some punctuation and capitalization — that is normal.
+   The key question: does this sound like someone SPEAKING, or like someone carefully TYPING?
+   It should have:
+   - Natural speech patterns: fillers, run-on sentences, topic changes, hesitations
+   - Inconsistent formatting (some punctuation present, some missing — not perfectly formatted)
+   - Numbers mostly as spoken words (but some digit usage is acceptable)
+   FAIL if it reads like carefully composed written text with a few "um"s mechanically inserted.
+   FAIL if it has perfect, consistent formatting throughout that no ASR engine would produce.
+   PASS if it sounds like natural speech even if the ASR has added some punctuation/capitalization.
 
 2. "content_preserved": Does the output preserve ALL substantive information from the input?
    Compare carefully — no facts, names, numbers, instructions, or meaning should be dropped.
@@ -85,10 +88,10 @@ Score this pair on 4 criteria. Answer ONLY with a JSON object, no other text.
    numbers) are fine — adding NEW words/ideas is a FAIL.
 
 4. "corrections_applied": Is the cleanup done correctly?
-   - Fillers (um, uh, basically, actually, like, you know) removed
+   - Fillers (um, uh, basically, actually, like, you know, so, I mean) removed
    - Self-corrections applied correctly (only the corrected version kept)
    - Numbers/dates/currency properly formatted
-   - Punctuation and capitalization added appropriately
+   - Punctuation and capitalization added consistently
    FAIL if obvious cleanup was missed or done incorrectly.
 
 {{"input_realistic": true/false, "content_preserved": true/false, "no_hallucination": true/false, "corrections_applied": true/false}}"""
