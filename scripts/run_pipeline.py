@@ -42,6 +42,15 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from common import (
     CONFIG_PATH,
+    DATA_COMBINED,
+    DATA_RAW,
+    DATA_SYNTHETIC,
+    EVAL_RESULTS,
+    MODELS_ADAPTERS,
+    MODELS_BASE,
+    MODELS_FUSED,
+    MODELS_MLX,
+    MODELS_QUANTIZED,
     PIPELINE_STATE_PATH,
     PROJECT_ROOT,
     base_arg_parser,
@@ -219,6 +228,56 @@ def _is_step_done(state: dict[str, Any], step_id: str) -> bool:
     return state.get("steps", {}).get(step_id, {}).get("status") == "done"
 
 
+def _has_nonempty_jsonl(directory: Path) -> bool:
+    """Return True if *directory* contains at least one non-empty .jsonl file."""
+    if not directory.is_dir():
+        return False
+    return any(f.stat().st_size > 0 for f in directory.glob("*.jsonl"))
+
+
+def _has_model_dir(parent: Path) -> bool:
+    """Return True if *parent* contains at least one model subdirectory with config.json."""
+    if not parent.is_dir():
+        return False
+    return any((d / "config.json").is_file() for d in parent.iterdir() if d.is_dir())
+
+
+def _step_has_artifacts(step_id: str) -> bool:
+    """Check whether *step_id*'s expected output artifacts exist on disk.
+
+    This is a heuristic fallback used during dependency validation to detect
+    steps that were completed outside the orchestrator (e.g. run manually).
+    Checks are intentionally conservative — files must exist AND be non-empty.
+    """
+    checks: dict[str, callable] = {
+        "2": lambda: _has_nonempty_jsonl(DATA_RAW),
+        "3": lambda: (DATA_SYNTHETIC / "all_synthetic.jsonl").is_file()
+        and (DATA_SYNTHETIC / "all_synthetic.jsonl").stat().st_size > 0,
+        "3b": lambda: (DATA_SYNTHETIC / "validation_report.json").is_file()
+        and (DATA_SYNTHETIC / "validation_report.json").stat().st_size > 0,
+        "4": lambda: (DATA_COMBINED / "train.jsonl").is_file()
+        and (DATA_COMBINED / "train.jsonl").stat().st_size > 0,
+        "5": lambda: _has_model_dir(MODELS_BASE),
+        "6": lambda: _has_model_dir(MODELS_ADAPTERS),
+        "7": lambda: _has_model_dir(MODELS_FUSED) or _has_model_dir(MODELS_MLX),
+        "8": lambda: _has_model_dir(MODELS_QUANTIZED),
+        "9": lambda: any(
+            (d / "eval_summary.json").is_file()
+            for d in EVAL_RESULTS.iterdir()
+            if d.is_dir()
+        )
+        if EVAL_RESULTS.is_dir()
+        else False,
+    }
+    checker = checks.get(step_id)
+    if checker is None:
+        return False
+    try:
+        return checker()
+    except OSError:
+        return False
+
+
 def _clear_state() -> None:
     """Remove the pipeline state file."""
     if PIPELINE_STATE_PATH.exists():
@@ -228,12 +287,23 @@ def _clear_state() -> None:
 # ── Dependency resolution ──────────────────────────────────────────────────
 
 
-def _resolve_deps(requested_steps: list[str], state: dict[str, Any]) -> list[str]:
+def _resolve_deps(
+    requested_steps: list[str],
+    state: dict[str, Any],
+    log: Any = None,
+) -> list[str]:
     """Validate that dependencies are satisfied for each requested step.
 
     Returns the list of unsatisfied dependencies (empty = all good).
-    A dependency is satisfied if it's either in the requested steps
-    (will run before the dependent step) or already done in the state.
+    A dependency is satisfied if it is:
+      1. included in the requested steps (will run before the dependent), OR
+      2. already marked done in ``.pipeline_state.json``, OR
+      3. its output artifacts exist on disk (for steps run outside the
+         orchestrator).
+
+    When a dependency is satisfied via artifact detection (case 3), it is
+    retroactively marked as done in the state so that later checks and
+    ``--resume`` work correctly.
     """
     missing: list[str] = []
     requested_set = set(requested_steps)
@@ -243,12 +313,26 @@ def _resolve_deps(requested_steps: list[str], state: dict[str, Any]) -> list[str
         for dep in step_def.deps:
             dep_in_request = dep in requested_set
             dep_done = _is_step_done(state, dep)
-            if not dep_in_request and not dep_done:
-                missing.append(
-                    f"Step {step_id} ({step_def.name}) requires step {dep} "
-                    f"({STEPS[dep].name}), which is neither requested nor "
-                    f"previously completed."
-                )
+            if dep_in_request or dep_done:
+                continue
+
+            # Fallback: check if output artifacts exist on disk.
+            if _step_has_artifacts(dep):
+                if log:
+                    log.info(
+                        "Step %s (%s) not in pipeline state but output "
+                        "artifacts found — treating as done.",
+                        dep,
+                        STEPS[dep].name,
+                    )
+                _mark_step(state, dep, "done", completed_at="detected-from-artifacts")
+                continue
+
+            missing.append(
+                f"Step {step_id} ({step_def.name}) requires step {dep} "
+                f"({STEPS[dep].name}), which is neither requested nor "
+                f"previously completed."
+            )
     return missing
 
 
@@ -579,12 +663,21 @@ def main(argv: list[str] | None = None) -> int:
     # Load pipeline state.
     state = _load_state()
 
-    # If --resume, filter out completed steps.
+    # If --resume, filter out completed steps (state OR artifacts on disk).
     skipped_steps: list[str] = []
     if args.resume:
         run_steps: list[str] = []
         for sid in requested_steps:
             if _is_step_done(state, sid):
+                skipped_steps.append(sid)
+            elif _step_has_artifacts(sid):
+                log.info(
+                    "Step %s (%s) not in pipeline state but output "
+                    "artifacts found — skipping.",
+                    sid,
+                    STEPS[sid].name,
+                )
+                _mark_step(state, sid, "done", completed_at="detected-from-artifacts")
                 skipped_steps.append(sid)
             else:
                 run_steps.append(sid)
@@ -602,14 +695,13 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     # Validate dependencies.
-    dep_errors = _resolve_deps(requested_steps, state)
+    dep_errors = _resolve_deps(requested_steps, state, log=log)
     if dep_errors:
         log.error("Dependency errors:")
         for err in dep_errors:
             log.error("  • %s", err)
         log.error(
-            "\nInclude the missing steps in --steps, or run them first.\n"
-            "If they were previously completed, use --resume to acknowledge them."
+            "\nInclude the missing steps in --steps, or run them first."
         )
         return 1
 
