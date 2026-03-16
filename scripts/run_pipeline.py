@@ -567,6 +567,13 @@ def parse_args(argv: list[str] | None = None) -> Any:
         action="store_true",
         help="Clear pipeline state (.pipeline_state.json) and exit.",
     )
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        default=False,
+        help="Force re-run of steps even if output already exists. "
+        "Forwarded to child scripts that support --force.",
+    )
 
     args = parser.parse_args(argv)
     return args
@@ -709,6 +716,8 @@ def main(argv: list[str] | None = None) -> int:
     overrides: dict[str, Any] = {}
     if args.model is not None:
         overrides["model"] = args.model
+    if args.force:
+        overrides["force"] = True
     if args.synthetic_samples is not None:
         overrides["synthetic_samples"] = args.synthetic_samples
     if args.sample_rate is not None:
