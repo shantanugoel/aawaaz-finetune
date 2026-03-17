@@ -108,24 +108,59 @@ Target per category: 2000.
 
 The `categories` parameter overrides `category_type` when both are specified.
 
-## Context Freshness
+## Agent Architecture
 
-**Important for large generation runs:** Each category should be generated in its
-own agent session (a fresh context window). This avoids context overload and
-compaction issues that degrade quality in later batches.
+Each level spawns fresh sub-agents, so no single context accumulates the full
+dataset. This keeps quality consistent across thousands of pairs.
 
-When using the master prompt with agents that support parallel execution:
-- Each category task is launched as a separate sub-agent (fresh context)
-- The master agent only orchestrates — it doesn't generate data itself
+```
+┌─────────────────────────────────────────────────────────┐
+│  User                                                   │
+│  "Read master.md, target 2000, model: opus, val: gpt"   │
+└──────────────────────┬──────────────────────────────────┘
+                       │
+                       ▼
+┌─────────────────────────────────────────────────────────┐
+│  Master Agent  (orchestrator only — no data generation) │
+│  Reads master.md, discovers categories, fans out tasks  │
+└──┬──────┬──────┬──────┬──────┬──────────────────────┬───┘
+   │      │      │      │      │          ...         │
+   ▼      ▼      ▼      ▼      ▼                      ▼
+┌──────┐┌──────┐┌──────┐┌──────┐┌──────┐         ┌──────┐
+│casual││email ││tech  ││meet- ││shop- │   ...   │self- │
+│conv. ││prof. ││code  ││notes ││lists │         │corr. │
+└──┬───┘└──┬───┘└──┬───┘└──┬───┘└──┬───┘         └──┬───┘
+   │       │       │       │       │                 │
+   ▼       ▼       ▼       ▼       ▼                 ▼
+  Each category agent runs the batch loop:
+  ┌───────────────────────────────────────────────┐
+  │  Category Agent  (loop controller)            │
+  │  For each batch of 50:                        │
+  │                                               │
+  │  ┌─────────────────────┐  fresh context       │
+  │  │  Generate Sub-Agent  │◄── per batch        │
+  │  │  (generation model)  │                     │
+  │  │  Creates 50 pairs    │                     │
+  │  └─────────┬───────────┘                      │
+  │            │                                  │
+  │            ▼                                  │
+  │  ┌─────────────────────┐  fresh context       │
+  │  │  Validate Sub-Agent  │◄── per batch        │
+  │  │  (validation model)  │                     │
+  │  │  Scores each pair    │                     │
+  │  └─────────┬───────────┘                      │
+  │            │                                  │
+  │            ▼                                  │
+  │  Pass → append to file                        │
+  │  Fail → feed reasons into next generate batch │
+  │  Repeat until target reached                  │
+  └───────────────────────────────────────────────┘
+```
 
-When running categories individually:
-- Start a new agent session for each category
-- Don't generate multiple categories in the same session
-
-Within a single category, the batch loop (generate → validate → fix → repeat) runs
-in one session. This is fine — individual batches are small (50 pairs) and the
-context stays manageable. The resume mechanism means you can also split a large
-category across sessions if needed.
+**Why this matters for quality:** For 2000 pairs at batch_size=50, that's ~40
+batches. Each generation and validation call gets a fresh context window with only
+the category prompt + 50 pairs. No context grows unbounded, so batch 40 is the
+same quality as batch 1.
 
 ## Model Selection
 
