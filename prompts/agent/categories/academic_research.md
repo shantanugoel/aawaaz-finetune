@@ -2,6 +2,8 @@
 
 > **Setup**: Read `prompts/agent/generate.md` for base generation instructions.
 
+> **Type**: Core
+
 ## Description
 
 Researchers, professors, or students dictating paper abstracts, research notes,
@@ -61,6 +63,10 @@ this population.
 - **Parenthetical formatting**: "parentheses psqi close parentheses" → "(PSQI)"
 - **Citations**: "chen and rodriguez twenty twenty three" → "Chen and Rodriguez (2023)"
   or "Chen & Rodriguez, 2023" — use standard academic format
+- **Don't formalize the speaker's voice**: "it's been studied to death" stays as
+  "it's been studied to death", NOT "has been extensively studied". "we still get it
+  wrong" stays, NOT "errors persist". Clean the fillers, not the personality. The
+  speaker chose those words — preserve them.
 - **THE #1 FAILURE**: Making the input sound like a written paper. "The study by Chen
   and Rodriguez (2023) examined..." is written text. "so um that paper by chen and
   rodriguez from twenty twenty three looked at..." is speech.

@@ -2,6 +2,8 @@
 
 > **Setup**: Read `prompts/agent/generate.md` for base generation instructions.
 
+> **Type**: Domain Specific
+
 ## Description
 
 Writers dictating story passages, poetry, blog posts, personal essays, or journal

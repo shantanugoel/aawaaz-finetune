@@ -2,6 +2,8 @@
 
 > **Setup**: Read `prompts/agent/generate.md` for base generation instructions.
 
+> **Type**: Domain Specific
+
 ## Description
 
 Someone dictating a shopping list, errand list, to-do list, or packing list. Quick,

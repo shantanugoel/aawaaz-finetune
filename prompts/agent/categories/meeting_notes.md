@@ -2,12 +2,16 @@
 
 > **Setup**: Read `prompts/agent/generate.md` for base generation instructions.
 
+> **Type**: Domain Specific
+
 ## Description
 
-Someone recapping or live-noting a meeting — summarizing discussions, decisions, and
-action items. They're recalling from memory after the meeting or speaking during the
-meeting to capture key points. Topics jump around, they remember things out of order,
-and they reference people by first name.
+Someone recapping or live-noting a meeting — reorganizing spoken meeting content into
+note format without dropping any content. They're recalling from memory after the
+meeting or speaking during the meeting to capture key points. Topics jump around, they
+remember things out of order, and they reference people by first name. The output
+reformats and reorganizes, but must preserve every fact, name, number, and action item
+from the input — this is reformatting, not summarization.
 
 ## Speech Patterns for This Category
 

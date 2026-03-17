@@ -2,6 +2,8 @@
 
 > **Setup**: Read `prompts/agent/generate.md` for base generation instructions.
 
+> **Type**: Core
+
 ## Description
 
 Friend-to-friend voice messages, voice notes about daily life, casual updates about

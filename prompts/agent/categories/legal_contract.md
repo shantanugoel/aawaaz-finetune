@@ -2,6 +2,8 @@
 
 > **Setup**: Read `prompts/agent/generate.md` for base generation instructions.
 
+> **Type**: Core
+
 ## Description
 
 Legal professionals dictating contract clauses, legal correspondence, court notes,

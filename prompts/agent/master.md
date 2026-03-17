@@ -16,7 +16,8 @@ The user should specify these when invoking. Use defaults if not provided.
 | validation_model | (a different model) | Model for validating data — should differ from generation_model to avoid self-preference bias |
 | target_per_category | 200 | Number of pairs to generate per category |
 | batch_size | 50 | Pairs per generation-validation cycle |
-| categories | all | Comma-separated list, or "all" for every category file |
+| category_type | all | Which category types to run: `core`, `domain_specific`, or `all` |
+| categories | (from type) | Comma-separated list to override type-based selection with specific categories |
 
 **Choosing models**: Using different model families for generation vs. validation
 produces the best results (e.g., Claude for generation, GPT for validation — or vice
@@ -32,9 +33,25 @@ List all `.md` files in `prompts/agent/categories/`. Each file defines one categ
 The category name is the filename without extension (e.g., `meeting_notes.md` →
 `meeting_notes`).
 
-If the user specified specific categories, filter to only those. Otherwise use all.
+Each category file contains a **Type** line (e.g., `> **Type**: Core` or
+`> **Type**: Domain Specific`). Filter categories based on the `category_type`
+parameter:
 
-Report: "Found N categories: [list]"
+- `core` → only categories marked `Core` (conservative cleanup, no restructuring)
+- `domain_specific` → only categories marked `Domain Specific` (restructured output)
+- `all` → all categories regardless of type
+
+If the user specified specific categories via the `categories` parameter, use those
+instead (overrides `category_type`).
+
+**Current category types:**
+
+| Type | Categories |
+|------|-----------|
+| Core | casual_conversation, self_corrections_heavy, technical_code, financial_business, academic_research, legal_contract |
+| Domain Specific | meeting_notes, email_professional, recipe_cooking, shopping_lists, medical_clinical, creative_writing |
+
+Report: "Found N categories (type: [type]): [list]"
 
 ### Step 2: Ensure Output Directory
 

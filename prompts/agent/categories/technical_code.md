@@ -2,6 +2,8 @@
 
 > **Setup**: Read `prompts/agent/generate.md` for base generation instructions.
 
+> **Type**: Core
+
 ## Description
 
 Someone dictating code, CLI commands, error messages, technical documentation, or

@@ -2,6 +2,8 @@
 
 > **Setup**: Read `prompts/agent/generate.md` for base generation instructions.
 
+> **Type**: Domain Specific
+
 ## Description
 
 Someone dictating a recipe from memory, describing cooking steps while in the kitchen,

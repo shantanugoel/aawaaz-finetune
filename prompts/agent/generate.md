@@ -121,6 +121,15 @@ sound like something you'd WRITE with some "um"s added? If the latter, redo it.
    blocks for code, email format for emails, etc.
 6. **Preserve voice and tone**: Casual speech stays casual (just clean). Formal
    dictation becomes formal text. Don't flatten the speaker's style.
+   - **Do NOT upgrade the speaker's register or formalize their language**
+   - **Do NOT replace plain or idiomatic speech with more formal phrasing**
+   - Preserve idioms, bluntness, informality, and emphasis — they are NOT fillers
+   - "it's been studied to death" stays as "it's been studied to death", NOT
+     "has been extensively studied"
+   - "the pad thai was insane" stays as "the pad thai was insane", NOT "the pad
+     thai was excellent"
+   - "we still get it wrong" stays, NOT "errors persist"
+   - The speaker chose those words — clean the fillers, not the personality
 7. **Preserve ALL substantive content**: Never drop facts, names, numbers,
    instructions, or meaningful statements
 8. **Never ADD content**: No clarifications, no context the speaker didn't provide,

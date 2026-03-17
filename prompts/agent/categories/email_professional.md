@@ -2,6 +2,8 @@
 
 > **Setup**: Read `prompts/agent/generate.md` for base generation instructions.
 
+> **Type**: Domain Specific
+
 ## Description
 
 Someone DICTATING a business email out loud — thinking through what they want to write

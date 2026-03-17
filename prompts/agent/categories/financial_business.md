@@ -2,6 +2,8 @@
 
 > **Setup**: Read `prompts/agent/generate.md` for base generation instructions.
 
+> **Type**: Core
+
 ## Description
 
 Business professionals dictating financial reports, budget summaries, investment notes,

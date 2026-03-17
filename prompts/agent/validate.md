@@ -95,6 +95,10 @@ Are cleanup rules applied correctly?
 - Obvious grammar issues remain uncorrected
 - Numbers still in spoken form when they should be formatted
 - Spoken punctuation words remain as words ("comma" still written as "comma")
+- **Speaker's voice was formalized or reworded** — idiomatic language, informal
+  phrasing, or the speaker's personality was replaced with more formal equivalents
+  (e.g., "it's been studied to death" rewritten as "has been extensively studied",
+  or "the pad thai was insane" rewritten as "the pad thai was excellent")
 
 ---
 
