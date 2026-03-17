@@ -8,8 +8,8 @@ model. Create realistic pairs of:
 - **output**: The properly cleaned and formatted version
 
 You will generate data for ONE specific category (defined in the category-specific
-section of your instructions). Generate in batches, validate each batch via a
-sub-agent, fix failures, and continue until you reach the target count.
+section of your instructions). Generate in batches, validate each batch, fix
+failures, and continue until you reach the target count.
 
 ## Understanding the Task
 
@@ -165,31 +165,30 @@ guidance closely. Focus on:
 
 Write the pairs as JSONL text. Hold them for validation before appending to the file.
 
-### Step 2: Validate via Sub-Agent
+### Step 2: Validate the Batch
 
-After generating each batch, spawn a **validation sub-agent** to evaluate the pairs.
+Send the batch to the **validation_model** for evaluation. This should be done in a
+**separate context** (a sub-agent, a separate conversation, or a distinct model call)
+so the validator reviews with fresh eyes — not the same context that generated the data.
 
-Use the Agent tool with:
-- **model**: set to the `validation_model` parameter
-- **description**: "Validate batch N for [category]"
-- **prompt**: Compose as follows:
+Provide the validator with:
+- The validation criteria from `prompts/agent/validate.md` (either include the content
+  or instruct the validator to read that file)
+- The batch pairs to evaluate (numbered, as JSON objects)
 
-```
-Read the file prompts/agent/validate.md for evaluation criteria and output format.
+The validator should return a JSON evaluation object with per-pair pass/fail results
+and a summary. See `validate.md` for the exact schema.
 
-Then evaluate these pairs:
-
-[Paste the batch pairs here, numbered 0 through N-1, as JSON objects]
-
-Return ONLY a JSON evaluation object as specified in validate.md.
-```
+**Using a different model for validation** (recommended): If the user specified a
+validation_model different from the generation model (e.g., generation with Claude
+Opus, validation with GPT 5.4), use that model for the validation step. This avoids
+self-preference bias — the generator doesn't judge its own work.
 
 ### Step 3: Process Validation Results
 
-Parse the validation agent's JSON response:
+Parse the validation JSON:
 
-- **Passing pairs**: Append to the output file immediately (use Bash to append JSONL
-  lines, or read the file and write the updated version)
+- **Passing pairs**: Append to the output file immediately
 - **Failing pairs**: Note the failure reasons. You will generate replacements.
 - **Report**: "Batch N: X/Y passed. Total: Z/target_count"
 

@@ -3,8 +3,8 @@
 ## Overview
 
 This prompt orchestrates parallel generation of synthetic transcript-cleanup training
-data across all categories. It fans out one agent per category (all running
-simultaneously), then runs a final cross-category review.
+data across all categories. It fans out one task per category (running in parallel
+where possible), then runs a final cross-category review.
 
 ## Parameters
 
@@ -12,11 +12,15 @@ The user should specify these when invoking. Use defaults if not provided.
 
 | Parameter | Default | Description |
 |-----------|---------|-------------|
-| generation_model | (inherit) | Claude model for category agents: `opus`, `sonnet`, or `haiku` |
-| validation_model | haiku | Claude model for validation sub-agents |
+| generation_model | (current model) | Model for generating data (e.g., `claude-opus-4-6`, `gpt-5.4`) |
+| validation_model | (a different model) | Model for validating data — should differ from generation_model to avoid self-preference bias |
 | target_per_category | 200 | Number of pairs to generate per category |
 | batch_size | 25 | Pairs per generation-validation cycle |
 | categories | all | Comma-separated list, or "all" for every category file |
+
+**Choosing models**: Using different model families for generation vs. validation
+produces the best results (e.g., Claude for generation, GPT for validation — or vice
+versa). This avoids the generator judging its own work favorably.
 
 ---
 
@@ -34,20 +38,15 @@ Report: "Found N categories: [list]"
 
 ### Step 2: Ensure Output Directory
 
-```bash
-mkdir -p data/prepared
-```
+Create `data/prepared/` if it doesn't exist.
 
-### Step 3: Fan Out — Launch One Agent Per Category
+### Step 3: Fan Out — One Task Per Category
 
-For EACH category, launch a **background** agent. All agents should be launched in a
-**single message** (parallel background agents).
+For EACH category, start a generation task using the **generation_model**. If your
+agent system supports parallel execution (background agents, concurrent tasks, etc.),
+launch all categories simultaneously. Otherwise, process them sequentially.
 
-For each category agent:
-- **model**: the `generation_model` parameter
-- **run_in_background**: true
-- **description**: "Generate [category_name] data"
-- **prompt**: Compose as follows:
+Each category task should receive:
 
 ```
 Read prompts/agent/categories/[category_name].md and follow its instructions.
@@ -59,29 +58,24 @@ Parameters for this run:
 - output_file: data/prepared/[category_name].jsonl
 ```
 
-Launch ALL category agents in a single message to maximize parallelism.
+The category prompt will direct the agent to also read `prompts/agent/generate.md`
+for base instructions and `prompts/agent/validate.md` for validation criteria.
 
 ### Step 4: Wait for Completion
 
-You will be automatically notified as each background agent completes. Do NOT poll
-or sleep. Continue to wait until ALL agents have reported back.
-
-As each completes, note:
+Wait for all category tasks to finish. As each completes, note:
 - Category name
 - Success/failure
-- Number of pairs generated (from the agent's report)
+- Number of pairs generated (from the task's report)
 
 ### Step 5: Final Review
 
-Once all category agents have completed:
+Once all category tasks have completed:
 
 1. Read `prompts/agent/final_review.md`
-2. Launch a **foreground** agent with:
-   - **model**: the `validation_model` parameter
-   - **description**: "Final review of all categories"
-   - **prompt**: The content of `final_review.md`
-
-Wait for the review to complete.
+2. Start a review task (using either model) that follows those instructions to do a
+   cross-category quality check across all files in `data/prepared/`
+3. Wait for the review to complete
 
 ### Step 6: Report to User
 
@@ -105,20 +99,19 @@ Summarize the full run:
 ```
 
 If any categories failed or the final review flagged issues, highlight them clearly
-and suggest next steps (e.g., "Re-run casual_conversation with: Read
-prompts/agent/categories/casual_conversation.md ...").
+and suggest re-running just those categories individually.
 
 ---
 
 ## Error Handling
 
-- If a category agent fails: note it, continue with others, report at the end
+- If a category task fails: note it, continue with others, report at the end
 - If most categories fail: stop and report the common error (likely API/model issue)
 - If the final review flags serious issues in specific categories: suggest re-running
-  just those categories individually
+  just those categories
 
 ## Resume Behavior
 
-Each category agent independently checks its output file for existing pairs and only
+Each category task independently checks its output file for existing pairs and only
 generates the remaining count. So re-running the master prompt after a partial failure
 will skip already-completed categories and resume incomplete ones.

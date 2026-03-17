@@ -85,42 +85,41 @@ prompts/agent/
 **Individual category mode** — run one category at a time:
 ```
 User → Agent: "Read prompts/agent/categories/meeting_notes.md and follow its
-               instructions. Generate 200 pairs. Use haiku for validation."
+               instructions. Generate 200 pairs. Use GPT 5.4 for validation."
 ```
 The agent reads the category file, which directs it to read `generate.md` for
-base instructions. It generates data, spawns validation sub-agents per batch,
-loops until done. Output: `data/prepared/meeting_notes.jsonl`.
+base instructions. It generates data, validates each batch using the specified
+validation model, loops until done. Output: `data/prepared/meeting_notes.jsonl`.
 
 **Master mode** — fan out all categories in parallel:
 ```
 User → Agent: "Read prompts/agent/master.md and execute.
-               Generation model: sonnet, validation model: haiku,
+               Generation model: claude-opus-4-6, validation model: gpt-5.4,
                target per category: 200."
 ```
-The master agent reads all category files and spawns one **background agent per
-category**, all running in parallel. Each category agent self-bootstraps by
-reading its own file + base instructions. After all complete, a final review
-agent checks cross-category quality.
+The master reads all category files and starts one task per category (in parallel
+if the agent system supports it). Each task self-bootstraps by reading its own
+file + base instructions. After all complete, a final review checks quality.
 
-#### Agent Nesting (3 levels)
+#### Task Structure
 
 ```
-Level 1: Master Agent (user's session)
+Master Task (user's session)
   ├── reads master.md
-  ├── fans out 12 background agents (one per category)
+  ├── fans out 12 category tasks (parallel where supported)
   │
-Level 2: Category Agent (one per category, runs in parallel)
+Category Task (one per category)
   │   ├── reads category .md → reads generate.md
-  │   ├── generates batch of 25 pairs
-  │   ├── spawns validation sub-agent ──┐
-  │   ├── processes results             │
-  │   ├── fixes/regenerates failures    │
-  │   └── loops until target reached    │
-  │                                     │
-Level 3: Validation Sub-Agent ──────────┘
-      ├── reads validate.md
-      ├── evaluates batch on 4 criteria
-      └── returns JSON pass/fail per pair
+  │   ├── generates batch of 25 pairs (using generation_model)
+  │   ├── sends batch to validation_model for evaluation
+  │   ├── processes results
+  │   ├── fixes/regenerates failures
+  │   └── loops until target reached
+  │
+Final Review Task
+      ├── reads final_review.md
+      ├── samples across all category output files
+      └── reports cross-category quality assessment
 ```
 
 #### Why This Is Better Than Scripts
@@ -138,11 +137,13 @@ Level 3: Validation Sub-Agent ──────────┘
 #### Model Selection
 
 The user specifies models at invocation time:
-- **Generation model**: The Claude model used for category agents (sonnet, opus, haiku)
-- **Validation model**: The Claude model used for validation sub-agents (typically
-  haiku — fast, cheap, good enough for evaluation)
+- **Generation model**: The model that creates the pairs (e.g., `claude-opus-4-6`,
+  `gpt-5.4`, or any model the agent system supports)
+- **Validation model**: The model that evaluates pairs (should be a different model
+  family to avoid self-preference bias)
 
-In Claude Code, this maps to the `model` parameter on the Agent tool.
+The prompts are agent-system-agnostic — they work with Claude Code, GitHub Copilot
+CLI, Cursor, or any agent that can read files, generate text, and write output.
 
 ---
 

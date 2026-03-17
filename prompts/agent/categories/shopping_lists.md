@@ -1,7 +1,6 @@
 # Category: Shopping Lists
 
-> **Setup**: Read `prompts/agent/generate.md` for base generation instructions and
-> workflow. Read `prompts/agent/validate.md` when spawning validation sub-agents.
+> **Setup**: Read `prompts/agent/generate.md` for base generation instructions.
 
 ## Description
 
