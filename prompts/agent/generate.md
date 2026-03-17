@@ -11,6 +11,17 @@ You will generate data for ONE specific category (defined in the category-specif
 section of your instructions). Generate in batches, validate each batch, fix
 failures, and continue until you reach the target count.
 
+## Parameters
+
+These are passed in by the orchestrator or the user. Use defaults if not provided.
+
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| target_count | 200 | Total number of pairs to generate for this category |
+| batch_size | 50 | Number of pairs to generate per generation-validation cycle |
+| validation_model | (a different model) | Model used for validation — should differ from generation model |
+| output_file | data/prepared/[category_name].jsonl | Where to write the generated pairs |
+
 ## Understanding the Task
 
 A user speaks into their phone or computer. Whisper (an ASR engine) transcribes it.

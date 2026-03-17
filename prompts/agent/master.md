@@ -15,7 +15,7 @@ The user should specify these when invoking. Use defaults if not provided.
 | generation_model | (current model) | Model for generating data (e.g., `claude-opus-4-6`, `gpt-5.4`) |
 | validation_model | (a different model) | Model for validating data — should differ from generation_model to avoid self-preference bias |
 | target_per_category | 200 | Number of pairs to generate per category |
-| batch_size | 25 | Pairs per generation-validation cycle |
+| batch_size | 50 | Pairs per generation-validation cycle |
 | categories | all | Comma-separated list, or "all" for every category file |
 
 **Choosing models**: Using different model families for generation vs. validation
