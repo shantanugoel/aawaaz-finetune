@@ -14,7 +14,7 @@ models:
     enabled: true
 
 # === Platform ===
-platform: "linux"  # "linux" (Unsloth/CUDA) or "mac" (MLX)
+platform: "mac"  # "linux" (Unsloth/CUDA) or "mac" (MLX)
 
 # === Dataset ===
 dataset:

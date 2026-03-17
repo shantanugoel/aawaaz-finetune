@@ -238,11 +238,24 @@ def _validate_chat_template(model_source: str, platform: str) -> None:
                 "Template may be misconfigured."
             )
 
-    # Verify thinking mode is not triggered
-    if "<think>" in formatted:
+    # Verify thinking mode is not triggered.
+    # Qwen3 tokenizers may insert empty <think>\n\n</think> blocks even with
+    # enable_thinking=False — that's harmless.  Only fail if the block has
+    # actual content.
+    import re as _re
+
+    think_blocks = _re.findall(r"<think>(.*?)</think>", formatted, _re.DOTALL)
+    non_empty = [b for b in think_blocks if b.strip()]
+    if non_empty:
         raise ValueError(
-            "Chat template output contains <think> tags even with "
-            "enable_thinking=False. Thinking mode is not properly disabled."
+            "Chat template output contains non-empty <think> blocks even with "
+            "enable_thinking=False. Thinking mode is not properly disabled. "
+            f"Content: {non_empty[0][:200]!r}"
+        )
+    if think_blocks:
+        logger.info(
+            "Chat template contains empty <think></think> tags (expected "
+            "for Qwen3 with enable_thinking=False). These are harmless."
         )
 
     # Round-trip: tokenize and decode
