@@ -384,12 +384,13 @@ def _generate_outputs(
                 add_generation_prompt=True,
             )
 
+        from mlx_lm.sample_utils import make_sampler
         response = mlx_lm.generate(
             model,
             tokenizer,
             prompt=formatted,
             max_tokens=1024,
-            temp=0.0,
+            sampler=make_sampler(temp=0.0),
         )
 
         # Strip <think> tags if present

@@ -359,12 +359,13 @@ def _run_inference(
 
         # Generate with timing
         start_time = time.perf_counter()
+        from mlx_lm.sample_utils import make_sampler
         raw_generated = mlx_lm.generate(
             model,
             tokenizer,
             prompt=formatted,
             max_tokens=max_tokens,
-            temp=temperature,
+            sampler=make_sampler(temp=temperature),
         )
         elapsed = time.perf_counter() - start_time
 

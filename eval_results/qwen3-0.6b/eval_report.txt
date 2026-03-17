@@ -1,0 +1,329 @@
+══════════════════════════════════════════════════════════════════════
+  Evaluation Report: qwen3-0.6b
+══════════════════════════════════════════════════════════════════════
+
+Headline Metrics
+────────────────────────────────────────
+  Exact Match:    12/200 (6.0%)
+  CER (mean):     0.1561 (median: 0.0993, range: 0.0000–1.5200)
+  BLEU (corpus):  0.6581
+  BLEU (sent avg):0.6374
+  Format Accuracy:0.9383
+    (200/200 samples had applicable checks)
+
+Format Sub-Check Breakdown
+────────────────────────────────────────
+  Number Format        123/147 (83.7%)
+  Filler Removal       125/126 (99.2%)
+  Self Correction      7/7 (100.0%)
+  Punctuation          171/175 (97.7%)
+  Emoji                2/2 (100.0%)
+
+Latency
+────────────────────────────────────────
+  Tokens/sec:          135.6
+  Avg sec/sample:      0.518
+  Total gen time:      103.6s
+  Total tokens:        14045
+
+Per-Category Breakdown: N/A
+  (test.jsonl does not include category metadata)
+
+══════════════════════════════════════════════════════════════════════
+  Worst 20 Samples (highest CER)
+══════════════════════════════════════════════════════════════════════
+
+  #1  (CER: 1.5200 | BLEU: 0.0174 | Exact: ✗ | Format: 1.00)
+  INPUT:    so the docker command is um docker space run space dash dash rm space dash it space dash p space eight zero eight zero colon eight zero eight zero space my dash image colon latest
+  EXPECTED: `docker run --rm -it -p 8080:8080 my-image:latest`
+  GENERATED:The Docker command is `docker space run space --rm space --space eight_zero eight_zero eight_zero my-image:latest`.
+  ····························································
+
+  #2  (CER: 1.1525 | BLEU: 0.0000 | Exact: ✗ | Format: 0.67)
+  INPUT:    Q one projections new line revenue is expected to hit four point five million dollars new line expenses will be roughly two point one million um wait sorry expenses will actually be two point two mill
+  EXPECTED: Q1 Projections:
+Revenue: $4.5M (expected).
+Expenses: $2.2M.
+  GENERATED:Q1: Projections new revenue is expected to hit $4.5 million.
+
+Q2: New expenses will be roughly $2.2 million.
+  ····························································
+
+  #3  (CER: 0.8525 | BLEU: 0.1005 | Exact: ✗ | Format: 0.67)
+  INPUT:    okay so the jest config needs um test match set to an array with one entry which is double asterisk forward slash tests forward slash double asterisk forward slash asterisk dot test dot js and then co
+  EXPECTED: The Jest config needs `testMatch` set to `["**/__tests__/**/*.test.js"]` and `coverageThreshold.global.lines` set to `80`.
+  GENERATED:The Jest config needs `test match` set to an array with one entry: `double asterisk / tests / double asterisk / asterisk dot test / js`. Then, coverage threshold is set to `global` lines set to `80`.
+  ····························································
+
+  #4  (CER: 0.8250 | BLEU: 0.2829 | Exact: ✗ | Format: 0.67)
+  INPUT:    so the blog post starts with something like uh I used to think productivity was about doing more things but I was wrong it's actually no wait let me say that differently it's about doing fewer things 
+  EXPECTED: I used to think productivity was about doing more things. I was wrong. It is about doing fewer things without flinching.
+  GENERATED:The blog post starts with something like: "I used to think productivity was about doing more things, but I was wrong — it's actually no, let me say that differently — it's about doing fewer things wit
+  ····························································
+
+  #5  (CER: 0.7077 | BLEU: 0.0962 | Exact: ✗ | Format: 1.00)
+  INPUT:    wire transfer details new line amount colon ten thousand dollars new line bank colon Chase um wait sorry bank colon Wells Fargo new line the fee is basically twenty five dollars actually
+  EXPECTED: Wire transfer details:
+Amount: $10,000
+Bank: Wells Fargo
+Fee: $25
+  GENERATED:Wire transfer details: $10,000
+
+Bank: Chase
+Wait, sorry, bank: Wells Fargo
+
+The fee is $25,000.
+  ····························································
+
+  #6  (CER: 0.6842 | BLEU: 0.1029 | Exact: ✗ | Format: 1.00)
+  INPUT:    docker run dash d dash p eight thousand colon eight thousand um wait no sorry docker run dash d dash p eight zero eight zero colon eight zero my underscore app colon latest full stop
+  EXPECTED: docker run -d -p 8080:80 my_app:latest
+  GENERATED:docker run -p 8080:8080 my_underscore_app_latest_fullstop
+  ····························································
+
+  #7  (CER: 0.6000 | BLEU: 0.0103 | Exact: ✗ | Format: 0.50)
+  INPUT:    okay so this is a big grocery run so let me just go through everything um starting with dairy so we need butter the unsalted kerrygold and uh heavy cream a pint and half and half for coffee and shredd
+  EXPECTED: **Dairy:**
+- Butter, unsalted (Kerrygold)
+- Heavy cream (1 pint)
+- Half and half (for coffee)
+- Shredded mozzarella (2 bags)
+- Ricotta (large container, for lasagna)
+- Cottage cheese, small curd
+
+**Pr
+  GENERATED:Okay, let's go through everything. Starting with dairy — we need unsalted kerrygold butter, heavy cream a pint and half and half for coffee, shredded mozzarella two bags, and ricotta for the lasagna. 
+  ····························································
+
+  #8  (CER: 0.5442 | BLEU: 0.1145 | Exact: ✗ | Format: 1.00)
+  INPUT:    oh I should note uh the meeting with uh procurement got pushed uh it was supposed to be thursday but now it's uh monday the twenty fourth at uh three thirty and uh the dial in details will be the same
+  EXPECTED: Note: The procurement meeting has been rescheduled. It was originally Thursday but is now Monday the 24th at 3:30. Dial-in details remain the same.
+  GENERATED:I should note the meeting with procurement. It was supposed to be Thursday but now it's Monday the 24th at 3:30 PM. The dial-in details will be the same as before.
+  ····························································
+
+  #9  (CER: 0.5322 | BLEU: 0.1990 | Exact: ✗ | Format: 1.00)
+  INPUT:    so uh the books I want to get through this quarter are Sapiens by Yuval Noah Harari which I started and never finished and The Innovators by Walter Isaacson and uh Thinking Fast and Slow which my mana
+  EXPECTED: Books I want to get through this quarter:
+
+- *Sapiens* — Yuval Noah Harari (started but never finished)
+- *The Innovators* — Walter Isaacson
+- *Thinking, Fast and Slow* — Daniel Kahneman (manager has 
+  GENERATED:The books I want to get through this quarter are Sapiens by Yuval Noah Harari, which I started and never finished. The Innovators by Walter Isaacson and Thinking Fast and Slow, which my manager has re
+  ····························································
+
+  #10  (CER: 0.4768 | BLEU: 0.2704 | Exact: ✗ | Format: 1.00)
+  INPUT:    quick notes from the product sync um we're deprioritizing the notification redesign for now and moving the uh the search improvements up to the top of the backlog and ryan said the search work will pr
+  EXPECTED: Product sync notes:
+
+- Notification redesign is being deprioritized.
+- Search improvements moved to the top of the backlog.
+- Ryan estimates the search work will take approximately three sprints.
+- Ta
+  GENERATED:Quick notes from the product sync:
+
+We're deprioritizing the notification redesign for now and moving the search improvements up to the top of the backlog. Ryan said the search work will probably take
+  ····························································
+
+  #11  (CER: 0.4667 | BLEU: 0.4133 | Exact: ✗ | Format: 0.50)
+  INPUT:    okay so the last line of the whole story uh I want it to be quiet not a big dramatic ending just something like uh she made coffee and she opened the window and for the first time in a long time the m
+  EXPECTED: She made coffee and opened the window, and for the first time in a long time, the morning felt like hers.
+  GENERATED:The last line of the whole story is: "She made coffee and she opened the window. For the first time in a long time, the morning felt like hers."
+  ····························································
+
+  #12  (CER: 0.4615 | BLEU: 0.2882 | Exact: ✗ | Format: 1.00)
+  INPUT:    um uh the the server logs show that the error occurred at two forty five AM on March third the CPU usage spiked to ninety eight percent and the memory was basically at capacity which is actually why t
+  EXPECTED: Server logs: error at 2:45 AM on March 3. CPU spiked to 98%, memory at capacity — which is why the container crashed.
+  GENERATED:The server logs show that the error occurred at 2:45 AM on March 3rd. The CPU usage spiked to 98% and the memory was at capacity, which is why the container crashed.
+  ····························································
+
+  #13  (CER: 0.4598 | BLEU: 0.3222 | Exact: ✗ | Format: 1.00)
+  INPUT:    the results section of the paper should report the following colon mean response time for the control group was four hundred and twelve milliseconds standard deviation eighty seven milliseconds mean r
+  EXPECTED: Results section: Mean response time for the control group was 412 ms (SD = 87 ms). Mean response time for the experimental group was 326 ms (SD = 62 ms). The difference was statistically significant: 
+  GENERATED:The results section of the paper should report the following: mean response time for the control group was 402 milliseconds (SD = 87 milliseconds), and mean response time for the experimental group wa
+  ····························································
+
+  #14  (CER: 0.4494 | BLEU: 0.3302 | Exact: ✗ | Format: 1.00)
+  INPUT:    so careful he might hear you is a nineteen eighty three australian drama film and it's based on the nineteen sixty three novel of the same name which was written by uh sumner locke elliott who was an 
+  EXPECTED: Careful, He Might Hear You is a 1983 Australian drama film. It is based on the 1963 novel of the same name by Australian-American author Sumner Locke Elliott.
+  GENERATED:Careful, he might hear you — it's a 1983 Australian drama film, based on the 1963 novel of the same name, which was written by Sumner Locke Elliott, an Australian-American author.
+  ····························································
+
+  #15  (CER: 0.4322 | BLEU: 0.1932 | Exact: ✗ | Format: 0.50)
+  INPUT:    for the cookie dough you cream two sticks of butter that's a cup with three quarters cup of white sugar and three quarters cup of brown sugar then add two eggs and two teaspoons of vanilla then mix in
+  EXPECTED: **Chocolate Chip Cookie Dough**
+
+1. Cream 2 sticks (1 cup) of butter with ¾ cup white sugar and ¾ cup brown sugar.
+2. Add 2 eggs and 2 teaspoons of vanilla.
+3. Mix in 2¼ cups of flour, 1 teaspoon of b
+  GENERATED:For the cookie dough: cream two sticks of butter that's a cup with three quarters cup of white sugar and three quarters cup of brown sugar, then add two eggs and two teaspoons of vanilla. Mix in two a
+  ····························································
+
+  #16  (CER: 0.4215 | BLEU: 0.4091 | Exact: ✗ | Format: 1.00)
+  INPUT:    so saturn has been showing up in fiction for a really long time like since uh seventeen fifty two when voltaire wrote micromegas that novel and in the earliest depictions saturn was portrayed as havin
+  EXPECTED: Saturn has made appearances in fiction since the 1752 novel Micromégas by Voltaire. In the earliest depictions, it was portrayed as having a solid surface rather than its actual gaseous composition. I
+  GENERATED:Saturn has been showing up in fiction for a really long time — since 1752 when Voltaire wrote Micromegas. In the earliest depictions, Saturn was portrayed as having a solid surface rather than the act
+  ····························································
+
+  #17  (CER: 0.4201 | BLEU: 0.2412 | Exact: ✗ | Format: 0.67)
+  INPUT:    okay the weekly leadership sync uh attendees were myself uh vanessa and uh gregory and the new VP claire who was joining for the first time and uh first we reviewed uh OKRs for the quarter and we're o
+  EXPECTED: Weekly leadership sync. Attendees: myself, Vanessa, Gregory, and Claire (new VP, first meeting).
+
+- **OKR Review:** On track for two of three OKRs. The third — customer satisfaction score — is lagging
+  GENERATED:The weekly leadership sync attendees were myself, Vanessa, and Gregory. The new VP Claire joined for the first time. We reviewed OKRs for the quarter and are on track for two of the three. The third o
+  ····························································
+
+  #18  (CER: 0.4037 | BLEU: 0.2781 | Exact: ✗ | Format: 0.50)
+  INPUT:    okay uh the function signature for the uh async one is async def fetch underscore data open paren url colon str comma timeout colon int equals sixty close paren and the return type annotation is uh ar
+  EXPECTED: The function signature is:
+```python
+async def fetch_data(url: str, timeout: int = 60) -> dict[str, any]:
+```
+  GENERATED:The function signature for the async one is `async def fetch_data(url: str, timeout: int = 60)` and the return type is `dict`.
+  ····························································
+
+  #19  (CER: 0.3945 | BLEU: 0.1702 | Exact: ✗ | Format: 1.00)
+  INPUT:    to set up the integration you're gonna go to settings no wait first you log in as admin then go to settings then click integrations no it's called connections now they renamed it find the slack option
+  EXPECTED: To set up the integration, first log in as admin, then go to Settings, then click Connections — they renamed it. Find the Slack option and enter your workspace token, which is the one that starts with
+  GENERATED:To set up the integration, go to Settings → Integrations → Connections. They renamed it "Find the Slack option" and enter your workspace token (starts with xoxb). Hit Save and it should sync within 5 
+  ····························································
+
+  #20  (CER: 0.3893 | BLEU: 0.3368 | Exact: ✗ | Format: 0.67)
+  INPUT:    so when the first world war ended in november nineteen eighteen there were thousands of australian servicemen still over in europe as part of the first australian imperial force the AIF and a lot of t
+  EXPECTED: When the First World War ended in November 1918, thousands of Australian servicemen were in Europe as members of the First Australian Imperial Force (AIF) and many remained until the spring of 1919. I
+  GENERATED:When the First World War ended in November 1918, there were thousands of Australian servicemen still over in Europe as part of the First Australian Imperial Force (AIF). The AIF and a lot of them stay
+  ····························································
+══════════════════════════════════════════════════════════════════════
+  Best 20 Samples (lowest CER)
+══════════════════════════════════════════════════════════════════════
+
+  #1  (CER: 0.0000 | BLEU: 1.0000 | Exact: ✓ | Format: 1.00)
+  INPUT:    so this connects to the broader debate in cognitive neuroscience about whether working memory capacity is um is domain-general or domain-specific and um kane and engle from two thousand and two argued
+  EXPECTED: This connects to the broader debate in cognitive neuroscience about whether working memory capacity is domain-general or domain-specific. Kane and Engle (2002) argued for a domain-general executive at
+  GENERATED:This connects to the broader debate in cognitive neuroscience about whether working memory capacity is domain-general or domain-specific. Kane and Engle (2002) argued for a domain-general executive at
+  ····························································
+
+  #2  (CER: 0.0000 | BLEU: 1.0000 | Exact: ✓ | Format: 1.00)
+  INPUT:    find all prime numbers between one and one hundred
+  EXPECTED: Find all prime numbers between 1 and 100.
+  GENERATED:Find all prime numbers between 1 and 100.
+  ····························································
+
+  #3  (CER: 0.0000 | BLEU: 1.0000 | Exact: ✓ | Format: 1.00)
+  INPUT:    hey so um quick question did you end up returning those shoes or did you keep them because I saw the same ones at the mall yesterday and they were on sale for like forty percent off and I didn't know 
+  EXPECTED: Hey, quick question — did you end up returning those shoes or did you keep them? I saw the same ones at the mall yesterday and they were on sale for 40% off, and I didn't know if you'd already dealt w
+  GENERATED:Hey, quick question — did you end up returning those shoes or did you keep them? I saw the same ones at the mall yesterday and they were on sale for 40% off, and I didn't know if you'd already dealt w
+  ····························································
+
+  #4  (CER: 0.0000 | BLEU: 1.0000 | Exact: ✓ | Format: 1.00)
+  INPUT:    uh name three types of renewable energy
+  EXPECTED: Name three types of renewable energy.
+  GENERATED:Name three types of renewable energy.
+  ····························································
+
+  #5  (CER: 0.0000 | BLEU: 1.0000 | Exact: ✓ | Format: 1.00)
+  INPUT:    okay so for the confidentiality obligations uh the receiving party shall hold all confidential information in strict confidence and shall not disclose any confidential information to any third party w
+  EXPECTED: For the confidentiality obligations: the receiving party shall hold all confidential information in strict confidence and shall not disclose any confidential information to any third party without the
+  GENERATED:For the confidentiality obligations: the receiving party shall hold all confidential information in strict confidence and shall not disclose any confidential information to any third party without the
+  ····························································
+
+  #6  (CER: 0.0000 | BLEU: 1.0000 | Exact: ✓ | Format: 1.00)
+  INPUT:    the p value was less than point oh five so it is significant
+  EXPECTED: The p-value was less than 0.05, so it is significant.
+  GENERATED:The p-value was less than 0.05, so it is significant.
+  ····························································
+
+  #7  (CER: 0.0000 | BLEU: 1.0000 | Exact: ✓ | Format: 1.00)
+  INPUT:    the patient is a um sixty seven year old male with a history of uh type two diabetes hypertension and uh chronic kidney disease stage three
+  EXPECTED: The patient is a 67-year-old male with a history of type 2 diabetes, hypertension, and chronic kidney disease stage 3.
+  GENERATED:The patient is a 67-year-old male with a history of type 2 diabetes, hypertension, and chronic kidney disease stage 3.
+  ····························································
+
+  #8  (CER: 0.0000 | BLEU: 1.0000 | Exact: ✓ | Format: 1.00)
+  INPUT:    what is the difference between authentication and authorisation
+  EXPECTED: What is the difference between authentication and authorisation?
+  GENERATED:What is the difference between authentication and authorisation?
+  ····························································
+
+  #9  (CER: 0.0000 | BLEU: 1.0000 | Exact: ✓ | Format: 1.00)
+  INPUT:    the neurons in the prefrontal cortex showed increased firing rates during the task and um the mean spike frequency went from uh twelve hertz at baseline up to thirty one hertz during the um during the
+  EXPECTED: The neurons in the prefrontal cortex showed increased firing rates during the task. The mean spike frequency went from 12 Hz at baseline up to 31 Hz during the decision-making phase, and that differen
+  GENERATED:The neurons in the prefrontal cortex showed increased firing rates during the task. The mean spike frequency went from 12 Hz at baseline up to 31 Hz during the decision-making phase, and that differen
+  ····························································
+
+  #10  (CER: 0.0000 | BLEU: 1.0000 | Exact: ✓ | Format: 1.00)
+  INPUT:    right so in no event shall either party be liable for any indirect incidental special exemplary or consequential damages even if uh even if such party has been advised of the possibility of such damag
+  EXPECTED: In no event shall either party be liable for any indirect, incidental, special, exemplary, or consequential damages, even if such party has been advised of the possibility of such damages.
+  GENERATED:In no event shall either party be liable for any indirect, incidental, special, exemplary, or consequential damages, even if such party has been advised of the possibility of such damages.
+  ····························································
+
+  #11  (CER: 0.0000 | BLEU: 1.0000 | Exact: ✓ | Format: 1.00)
+  INPUT:    summarise the key points from the last board meeting
+  EXPECTED: Summarise the key points from the last board meeting.
+  GENERATED:Summarise the key points from the last board meeting.
+  ····························································
+
+  #12  (CER: 0.0000 | BLEU: 1.0000 | Exact: ✓ | Format: 1.00)
+  INPUT:    so the total came out to uh four hundred and fifty no wait four hundred and fifteen dollars and we need to split it three ways
+  EXPECTED: The total came out to $415 and we need to split it three ways.
+  GENERATED:The total came out to $415 and we need to split it three ways.
+  ····························································
+
+  #13  (CER: 0.0034 | BLEU: 0.9441 | Exact: ✗ | Format: 1.00)
+  INPUT:    the archaeological dig site in egypt has unearthed a collection of ancient pottery and tools believed to be over four thousand years old the discovery provides new insights into the daily lives of the
+  EXPECTED: The archaeological dig site in Egypt has unearthed a collection of ancient pottery and tools believed to be over 4,000 years old. The discovery provides new insights into the daily lives of the labore
+  GENERATED:The archaeological dig site in Egypt has unearthed a collection of ancient pottery and tools believed to be over 4000 years old. The discovery provides new insights into the daily lives of the laborer
+  ····························································
+
+  #14  (CER: 0.0035 | BLEU: 0.9453 | Exact: ✗ | Format: 1.00)
+  INPUT:    the storm system moving in from the coast is expected to bring heavy rainfall and wind gusts up to sixty miles per hour residents in low lying areas are advised to evacuate before nightfall as flash f
+  EXPECTED: The storm system moving in from the coast is expected to bring heavy rainfall and wind gusts up to 60 mph. Residents in low-lying areas are advised to evacuate before nightfall, as flash flooding is h
+  GENERATED:The storm system moving in from the coast is expected to bring heavy rainfall and wind gusts up to 60 mph. Residents in low-lying areas are advised to evacuate before nightfall as flash flooding is hi
+  ····························································
+
+  #15  (CER: 0.0035 | BLEU: 1.0000 | Exact: ✗ | Format: 1.00)
+  INPUT:    dear uh search committee comma new paragraph I am pleased to uh submit my application for the position of director of operations new paragraph with uh fifteen years of experience in logistics and uh s
+  EXPECTED: Dear Search Committee,
+
+I am pleased to submit my application for the position of Director of Operations.
+
+With 15 years of experience in logistics and supply chain management, I have consistently del
+  GENERATED:Dear Search Committee,
+
+I am pleased to submit my application for the position of Director of Operations.
+
+With 15 years of experience in logistics and supply chain management, I have consistently del
+  ····························································
+
+  #16  (CER: 0.0050 | BLEU: 0.9235 | Exact: ✗ | Format: 1.00)
+  INPUT:    the cronbach's alpha for our primary scale was point eight nine which indicates good internal consistency and we also ran a confirmatory factor analysis and the fit indices were uh CFI equals point ni
+  EXPECTED: The Cronbach's alpha for our primary scale was 0.89, indicating good internal consistency. We also ran a confirmatory factor analysis and the fit indices were CFI = 0.96, RMSEA = 0.05, and SRMR = 0.04
+  GENERATED:The Cronbach's alpha for our primary scale was 0.89, indicating good internal consistency. We also ran a confirmatory factor analysis and the fit indices were: CFI = 0.96, RMSEA = 0.05, and SRMR = 0.0
+  ····························································
+
+  #17  (CER: 0.0051 | BLEU: 0.9355 | Exact: ✗ | Format: 1.00)
+  INPUT:    I don't know I'm kind of nervous about the interview tomorrow like I feel like I've prepared enough but then I start thinking about it and I'm like wait what if they ask me something I haven't thought
+  EXPECTED: I don't know, I'm kind of nervous about the interview tomorrow. I feel like I've prepared enough, but then I start thinking about it and I'm like, what if they ask me something I haven't thought of?
+  GENERATED:I don't know I'm kind of nervous about the interview tomorrow. I feel like I've prepared enough, but then I start thinking about it and I'm like, what if they ask me something I haven't thought of?
+  ····························································
+
+  #18  (CER: 0.0075 | BLEU: 1.0000 | Exact: ✗ | Format: 1.00)
+  INPUT:    hi rob comma new paragraph just a quick one uh the catering order for the uh client dinner on friday has been confirmed it's uh for twenty people and the total cost will be uh around six hundred and f
+  EXPECTED: Hi Rob,
+
+Just a quick one — the catering order for the client dinner on Friday has been confirmed. It's for 20 people and the total cost will be around $650, which I'll put through on the corporate ca
+  GENERATED:Hi Rob,
+
+Just a quick one — the catering order for the client dinner on Friday has been confirmed. It's for 20 people and the total cost will be around $650, which I'll put through on the corporate ca
+  ····························································
+
+  #19  (CER: 0.0076 | BLEU: 0.8825 | Exact: ✗ | Format: 1.00)
+  INPUT:    french studies is a quarterly peer reviewed academic journal published by oxford university press on behalf of the society for french studies it was established in nineteen forty seven and covers all 
+  EXPECTED: French Studies is a quarterly peer-reviewed academic journal published by Oxford University Press on behalf of the Society for French Studies. It was established in 1947 and covers all periods of Fren
+  GENERATED:French Studies is a quarterly peer-reviewed academic journal published by Oxford University Press on behalf of the Society for French Studies. It was established in 1947 and covers all periods of Fren
+  ····························································
+
+  #20  (CER: 0.0081 | BLEU: 0.8787 | Exact: ✗ | Format: 1.00)
+  INPUT:    the sample size was uh n equals two hundred and forty seven participants and the p value came out to be less than point oh five so it was statistically significant
+  EXPECTED: The sample size was n = 247 participants and the p-value came out to be less than 0.05, so it was statistically significant.
+  GENERATED:The sample size was n = 247 participants, and the p-value came out to be less than 0.05, so it was statistically significant.
+  ····························································
