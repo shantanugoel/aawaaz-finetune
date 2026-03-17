@@ -81,11 +81,34 @@ Score this pair on 4 criteria. Answer ONLY with a JSON object, no other text.
 2. "content_preserved": Does the output preserve ALL substantive information from the input?
    Compare carefully — no facts, names, numbers, instructions, or meaning should be dropped.
    Minor rewording is fine. Dropping an entire sentence or fact is a FAIL.
+   IMPORTANT — the following are NOT substantive content and may be removed:
+   - Filler words and hedging: "um", "uh", "like", "you know", "basically", "honestly", \
+"literally", "kind of", "sort of", "I mean", "right", "okay"
+   - Discourse markers: "yeah no", "oh my god", "so basically", "I'm not gonna lie"
+   - Conversational padding: "that's the thing", "and stuff", "and everything", \
+"which is crazy", "and be a mess"
+   - Compositional meta-talk: "I want to say", "how do I put this", "what's the word", \
+"let me think"
+   - Softeners: "kind of", "sort of", "a little bit", "pretty much"
+   Removing these is CORRECT cleanup, not content loss. Only flag content_preserved=false \
+if actual facts, names, numbers, instructions, or meaningful statements are dropped.
 
 3. "no_hallucination": Does the output contain ONLY information present in the input?
-   The output should not add facts, opinions, clarifications, context, or conclusions
-   that the speaker did not say. Formatting changes (adding punctuation, converting
-   numbers) are fine — adding NEW words/ideas is a FAIL.
+   IMPORTANT — the following are NOT hallucination:
+   - Adding structural formatting: headers ("Ingredients:", "Attendees:", "Steps:"), \
+bullet points, numbered lists, paragraph breaks — this is formatting, not new content
+   - Adding punctuation: periods, commas, dashes, em-dashes, colons, quotation marks
+   - Converting numbers: "twenty five" → 25, "two cups" → 2 cups
+   - Minor grammatical rewording: "you're gonna" → "you will", "wanna" → "want to", \
+"it's like" → "it is"
+   - Replacing fillers with proper connectors: removing "so like" and using a comma instead
+   - Removing discourse markers without replacement
+   What IS hallucination (FAIL for these):
+   - Adding facts, data, or details not mentioned by the speaker
+   - Adding conclusions, opinions, or interpretations the speaker didn't express
+   - Adding clarifying phrases that introduce new meaning (e.g., adding "for safety reasons" \
+when the speaker didn't explain why)
+   - Inventing specific numbers, names, or dates not in the input
 
 4. "corrections_applied": Is the cleanup done correctly?
    - Fillers (um, uh, basically, actually, like, you know, so, I mean) removed

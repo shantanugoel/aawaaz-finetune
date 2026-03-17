@@ -103,7 +103,7 @@ _step_defs = [
         script="04_prepare_data.py",
         name="Prepare training data",
         deps=["2"],  # deps adjusted at runtime if validation is enabled
-        forwards=set(),
+        forwards={"force"},
     ),
     StepDef(
         step_id="5",
