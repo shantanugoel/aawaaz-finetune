@@ -1,0 +1,9 @@
+{
+  "exact_match_rate": 0.005,
+  "cer_mean": 0.8874680636113866,
+  "cer_median": 0.7304887472230271,
+  "bleu_mean": 0.41737756626821,
+  "tokens_per_sec": 110.98152865586201,
+  "num_format_rate": 0.375,
+  "filler_removal_rate": 0.8015267175572519
+}

@@ -1,0 +1,313 @@
+══════════════════════════════════════════════════════════════════════
+  Evaluation Report: qwen3-1.7b
+══════════════════════════════════════════════════════════════════════
+
+Headline Metrics
+────────────────────────────────────────
+  Exact Match:    13/200 (6.5%)
+  CER (mean):     0.2900 (median: 0.1018, range: 0.0000–28.6842)
+  BLEU (corpus):  0.6890
+  BLEU (sent avg):0.6526
+  Format Accuracy:0.9517
+    (200/200 samples had applicable checks)
+
+Format Sub-Check Breakdown
+────────────────────────────────────────
+  Number Format        131/147 (89.1%)
+  Filler Removal       126/126 (100.0%)
+  Self Correction      7/7 (100.0%)
+  Punctuation          170/175 (97.1%)
+  Emoji                1/2 (50.0%)
+
+Latency
+────────────────────────────────────────
+  Tokens/sec:          77.9
+  Avg sec/sample:      0.951
+  Total gen time:      190.2s
+  Total tokens:        14819
+
+Per-Category Breakdown: N/A
+  (test.jsonl does not include category metadata)
+
+══════════════════════════════════════════════════════════════════════
+  Worst 20 Samples (highest CER)
+══════════════════════════════════════════════════════════════════════
+
+  #1  (CER: 28.6842 | BLEU: 0.0129 | Exact: ✗ | Format: 1.00)
+  INPUT:    docker run dash d dash p eight thousand colon eight thousand um wait no sorry docker run dash d dash p eight zero eight zero colon eight zero my underscore app colon latest full stop
+  EXPECTED: docker run -d -p 8080:80 my_app:latest
+  GENERATED:docker run -d -p 8080:8080 -p 8081:8081 -p 8082:8082 -p 8083:8083 -p 8084:8084 -p 8085:8085 -p 8086:8086 -p 8087:8087 -p 8088:8088 -p 8089:8089 -p 8090:8090 -p 8091:8091 -p 8092:8092 -p 8093:8093 -p 8
+  ····························································
+
+  #2  (CER: 0.9153 | BLEU: 0.0170 | Exact: ✗ | Format: 0.33)
+  INPUT:    Q one projections new line revenue is expected to hit four point five million dollars new line expenses will be roughly two point one million um wait sorry expenses will actually be two point two mill
+  EXPECTED: Q1 Projections:
+Revenue: $4.5M (expected).
+Expenses: $2.2M.
+  GENERATED:Q1: Projections
+- Revenue: Expected to hit $4.5 million
+- Expenses: Approximately $2.2 million
+  ····························································
+
+  #3  (CER: 0.7356 | BLEU: 0.1464 | Exact: ✗ | Format: 1.00)
+  INPUT:    the results section of the paper should report the following colon mean response time for the control group was four hundred and twelve milliseconds standard deviation eighty seven milliseconds mean r
+  EXPECTED: Results section: Mean response time for the control group was 412 ms (SD = 87 ms). Mean response time for the experimental group was 326 ms (SD = 62 ms). The difference was statistically significant: 
+  GENERATED:The results section of the paper should report the following: the control group had a mean response time of 412 milliseconds and a standard deviation of 87 milliseconds. The experimental group had a m
+  ····························································
+
+  #4  (CER: 0.5800 | BLEU: 0.0596 | Exact: ✗ | Format: 1.00)
+  INPUT:    so the docker command is um docker space run space dash dash rm space dash it space dash p space eight zero eight zero colon eight zero eight zero space my dash image colon latest
+  EXPECTED: `docker run --rm -it -p 8080:8080 my-image:latest`
+  GENERATED:The Docker command is `docker run -d --rm -p 8080:8080 my-image:latest`.
+  ····························································
+
+  #5  (CER: 0.5306 | BLEU: 0.1648 | Exact: ✗ | Format: 1.00)
+  INPUT:    oh I should note uh the meeting with uh procurement got pushed uh it was supposed to be thursday but now it's uh monday the twenty fourth at uh three thirty and uh the dial in details will be the same
+  EXPECTED: Note: The procurement meeting has been rescheduled. It was originally Thursday but is now Monday the 24th at 3:30. Dial-in details remain the same.
+  GENERATED:The meeting with procurement was pushed. It was supposed to be Thursday, but now it's Monday the 24th at 3:30. The dial-in details will be the same as before.
+  ····························································
+
+  #6  (CER: 0.5229 | BLEU: 0.2709 | Exact: ✗ | Format: 0.50)
+  INPUT:    okay uh the function signature for the uh async one is async def fetch underscore data open paren url colon str comma timeout colon int equals sixty close paren and the return type annotation is uh ar
+  EXPECTED: The function signature is:
+```python
+async def fetch_data(url: str, timeout: int = 60) -> dict[str, any]:
+```
+  GENERATED:The function signature for the `async` one is `async def fetch_data(url: str, timeout: int = 60)`. The return type annotation is `ArrowDict`.
+  ····························································
+
+  #7  (CER: 0.4922 | BLEU: 0.2752 | Exact: ✗ | Format: 1.00)
+  INPUT:    to set up the integration you're gonna go to settings no wait first you log in as admin then go to settings then click integrations no it's called connections now they renamed it find the slack option
+  EXPECTED: To set up the integration, first log in as admin, then go to Settings, then click Connections — they renamed it. Find the Slack option and enter your workspace token, which is the one that starts with
+  GENERATED:To set up the integration:
+1. Go to Settings.
+2. Click Integrations (now called Connections).
+3. Find the Slack option and enter your workspace token (starts with xoxb).
+4. Hit Save. It should sync wi
+  ····························································
+
+  #8  (CER: 0.4825 | BLEU: 0.2006 | Exact: ✗ | Format: 1.00)
+  INPUT:    the store hours during the holiday season will be extended to ten PM weekdays and eleven PM on weekends we will be closed on christmas day and new years day but open with reduced hours on christmas ev
+  EXPECTED: Store hours during the holiday season: extended to 10 PM weekdays and 11 PM on weekends. Closed on Christmas Day and New Year's Day. Open Christmas Eve with reduced hours until 6 PM. Please update the
+  GENERATED:Store hours:
+- Weekdays: 10:00 PM
+- Weekends: 11:00 PM
+- Closed on Christmas Day and New Year's Day
+- Open with reduced hours on Christmas Eve until 6:00 PM
+
+Signage update: Front doors.
+  ····························································
+
+  #9  (CER: 0.4641 | BLEU: 0.2834 | Exact: ✗ | Format: 1.00)
+  INPUT:    quick notes from the product sync um we're deprioritizing the notification redesign for now and moving the uh the search improvements up to the top of the backlog and ryan said the search work will pr
+  EXPECTED: Product sync notes:
+
+- Notification redesign is being deprioritized.
+- Search improvements moved to the top of the backlog.
+- Ryan estimates the search work will take approximately three sprints.
+- Ta
+  GENERATED:Quick notes from the product sync: we're deprioritizing the notification redesign and moving the search improvements up to the top of the backlog. Ryan said the search work will probably take about th
+  ····························································
+
+  #10  (CER: 0.4444 | BLEU: 0.3456 | Exact: ✗ | Format: 1.00)
+  INPUT:    um uh the the server logs show that the error occurred at two forty five AM on March third the CPU usage spiked to ninety eight percent and the memory was basically at capacity which is actually why t
+  EXPECTED: Server logs: error at 2:45 AM on March 3. CPU spiked to 98%, memory at capacity — which is why the container crashed.
+  GENERATED:The server logs show that the error occurred at 2:45 AM on March 3. The CPU usage spiked to 98%, and the memory was at capacity, which is why the container crashed.
+  ····························································
+
+  #11  (CER: 0.4088 | BLEU: 0.4246 | Exact: ✗ | Format: 1.00)
+  INPUT:    so the image I keep coming back to is um a woman hanging laundry in the rain and she knows it's raining she's not confused she just doesn't care anymore and that's the whole story really that's the em
+  EXPECTED: The central image is a woman hanging laundry in the rain. She knows it's raining — she's not confused. She just doesn't care anymore. That is the emotional core of the entire story.
+  GENERATED:The image that comes back to me is a woman hanging laundry in the rain. She knows it's raining, and that's the whole story — that's the emotional core of the whole thing.
+  ····························································
+
+  #12  (CER: 0.4081 | BLEU: 0.2493 | Exact: ✗ | Format: 1.00)
+  INPUT:    I need to revisit the introduction because I think I'm overemphasizing the behavioral genetics angle when really the um the epigenetic mechanisms are more central to the argument I'm trying to make an
+  EXPECTED: I need to revisit the introduction because I am overemphasizing the behavioral genetics angle when the epigenetic mechanisms are more central to the argument. That shift in focus will also allow me to
+  GENERATED:The introduction needs to be revisited because the behavioral genetics angle is overemphasized. The epigenetic mechanisms are more central to the argument, and this shift will allow the inclusion of K
+  ····························································
+
+  #13  (CER: 0.3905 | BLEU: 0.4194 | Exact: ✗ | Format: 1.00)
+  INPUT:    okay so the last line of the whole story uh I want it to be quiet not a big dramatic ending just something like uh she made coffee and she opened the window and for the first time in a long time the m
+  EXPECTED: She made coffee and opened the window, and for the first time in a long time, the morning felt like hers.
+  GENERATED:The last line of the whole story: she made coffee and she opened the window and for the first time in a long time the morning felt like hers.
+  ····························································
+
+  #14  (CER: 0.3831 | BLEU: 0.3815 | Exact: ✗ | Format: 1.00)
+  INPUT:    okay so basically I was thinking we could do a soft launch first like invite only for the first two weeks get feedback iterate and then do the public launch once we're confident the core experience is
+  EXPECTED: I'm thinking we do a soft launch first — invite-only for the first two weeks, get feedback, iterate, then public launch once the core experience is solid.
+  GENERATED:I was thinking we could do a soft launch first, invite only for the first two weeks, get feedback, iterate, and then do the public launch once we're confident the core experience is solid. What do you
+  ····························································
+
+  #15  (CER: 0.3773 | BLEU: 0.3327 | Exact: ✗ | Format: 1.00)
+  INPUT:    okay so for the pie crust you need two and a half cups of flour um a teaspoon of salt and then a tablespoon of sugar if you want it a little sweet and uh a cup of cold butter cut into cubes and this i
+  EXPECTED: For the pie crust you need 2½ cups of flour, a teaspoon of salt, and a tablespoon of sugar if you want it a little sweet, and 1 cup of cold butter cut into cubes. The butter has to be cold — really co
+  GENERATED:For the pie crust, use 2½ cups of flour, a teaspoon of salt, and a tablespoon of sugar (if desired). Add a cup of cold butter, cut into cubes, and chill it in the freezer for 15 minutes before beginni
+  ····························································
+
+  #16  (CER: 0.3770 | BLEU: 0.3548 | Exact: ✗ | Format: 0.67)
+  INPUT:    so when the first world war ended in november nineteen eighteen there were thousands of australian servicemen still over in europe as part of the first australian imperial force the AIF and a lot of t
+  EXPECTED: When the First World War ended in November 1918, thousands of Australian servicemen were in Europe as members of the First Australian Imperial Force (AIF) and many remained until the spring of 1919. I
+  GENERATED:When the First World War ended in November 1918, there were thousands of Australian servicemen still over in Europe as part of the First Australian Imperial Force (AIF). A lot of them stayed until spr
+  ····························································
+
+  #17  (CER: 0.3750 | BLEU: 0.0496 | Exact: ✗ | Format: 1.00)
+  INPUT:    so the uh environment variable you need is uh database underscore url and you set it to uh postgres colon forward slash forward slash uh admin colon password at uh localhost colon five four three two 
+  EXPECTED: The environment variable you need is `DATABASE_URL`, and you set it to `postgres://admin:password@localhost:5432/my_db`.
+  GENERATED:The environment variables needed are `DATABASE_URL` and `DATABASE_PASSWORD`. Set `DATABASE_URL` to `postgres://admin:password@localhost:5432/my_db`.
+  ····························································
+
+  #18  (CER: 0.3732 | BLEU: 0.5640 | Exact: ✗ | Format: 1.00)
+  INPUT:    okay so the chapter starts with uh the year is like two thousand and twelve and our main character uh what do I want to call her let's say Delia Delia is seventeen and she's standing on the roof of he
+  EXPECTED: The year is 2012. Delia is seventeen, standing on the roof of her parents' house in New Mexico, watching a thunderstorm roll in from the west.
+  GENERATED:The chapter starts with the year being 2012. Our main character, Delia, is seventeen and standing on the roof of her parents' house in New Mexico, watching a thunderstorm roll in from the west.
+  ····························································
+
+  #19  (CER: 0.3608 | BLEU: 0.5532 | Exact: ✗ | Format: 1.00)
+  INPUT:    so careful he might hear you is a nineteen eighty three australian drama film and it's based on the nineteen sixty three novel of the same name which was written by uh sumner locke elliott who was an 
+  EXPECTED: Careful, He Might Hear You is a 1983 Australian drama film. It is based on the 1963 novel of the same name by Australian-American author Sumner Locke Elliott.
+  GENERATED:Careful He Might Hear You is a 1983 Australian drama film based on the 1963 novel of the same name, written by Sumner Locke Elliott (Australian-American author).
+  ····························································
+
+  #20  (CER: 0.3513 | BLEU: 0.4785 | Exact: ✗ | Format: 1.00)
+  INPUT:    so the retrospective today um people were pretty frustrated honestly about the deployment pipeline and uh raj said it took him like three hours to get a build through on wednesday and nina mentioned t
+  EXPECTED: The retrospective today surfaced frustration about the deployment pipeline. Raj said it took him three hours to get a build through on Wednesday, and Nina mentioned the same issue on Tuesday morning —
+  GENERATED:The retrospective today was pretty frustrating. Raj said it took him three hours to get a build through on Wednesday, and Nina mentioned the same thing happened on Tuesday morning. That's a recurring 
+  ····························································
+══════════════════════════════════════════════════════════════════════
+  Best 20 Samples (lowest CER)
+══════════════════════════════════════════════════════════════════════
+
+  #1  (CER: 0.0000 | BLEU: 1.0000 | Exact: ✓ | Format: 1.00)
+  INPUT:    find all prime numbers between one and one hundred
+  EXPECTED: Find all prime numbers between 1 and 100.
+  GENERATED:Find all prime numbers between 1 and 100.
+  ····························································
+
+  #2  (CER: 0.0000 | BLEU: 1.0000 | Exact: ✓ | Format: 1.00)
+  INPUT:    okay so you're gonna run uh pip install dash dash upgrade and then the package name is uh requests
+  EXPECTED: Run `pip install --upgrade requests`.
+  GENERATED:Run `pip install --upgrade requests`.
+  ····························································
+
+  #3  (CER: 0.0000 | BLEU: 1.0000 | Exact: ✓ | Format: 1.00)
+  INPUT:    uh name three types of renewable energy
+  EXPECTED: Name three types of renewable energy.
+  GENERATED:Name three types of renewable energy.
+  ····························································
+
+  #4  (CER: 0.0000 | BLEU: 1.0000 | Exact: ✓ | Format: 1.00)
+  INPUT:    the archaeological dig site in egypt has unearthed a collection of ancient pottery and tools believed to be over four thousand years old the discovery provides new insights into the daily lives of the
+  EXPECTED: The archaeological dig site in Egypt has unearthed a collection of ancient pottery and tools believed to be over 4,000 years old. The discovery provides new insights into the daily lives of the labore
+  GENERATED:The archaeological dig site in Egypt has unearthed a collection of ancient pottery and tools believed to be over 4,000 years old. The discovery provides new insights into the daily lives of the labore
+  ····························································
+
+  #5  (CER: 0.0000 | BLEU: 1.0000 | Exact: ✓ | Format: 1.00)
+  INPUT:    the p value was less than point oh five so it is significant
+  EXPECTED: The p-value was less than 0.05, so it is significant.
+  GENERATED:The p-value was less than 0.05, so it is significant.
+  ····························································
+
+  #6  (CER: 0.0000 | BLEU: 1.0000 | Exact: ✓ | Format: 1.00)
+  INPUT:    the patient is a um sixty seven year old male with a history of uh type two diabetes hypertension and uh chronic kidney disease stage three
+  EXPECTED: The patient is a 67-year-old male with a history of type 2 diabetes, hypertension, and chronic kidney disease stage 3.
+  GENERATED:The patient is a 67-year-old male with a history of type 2 diabetes, hypertension, and chronic kidney disease stage 3.
+  ····························································
+
+  #7  (CER: 0.0000 | BLEU: 1.0000 | Exact: ✓ | Format: 1.00)
+  INPUT:    article two point one comma the buyer agrees to purchase the property for one point two million dollars um wait scratch that one point two five million dollars full stop the closing date is set for Oc
+  EXPECTED: Article 2.1, the buyer agrees to purchase the property for $1.25 million. The closing date is set for October 31, 2025.
+  GENERATED:Article 2.1, the buyer agrees to purchase the property for $1.25 million. The closing date is set for October 31, 2025.
+  ····························································
+
+  #8  (CER: 0.0000 | BLEU: 1.0000 | Exact: ✓ | Format: 1.00)
+  INPUT:    the neurons in the prefrontal cortex showed increased firing rates during the task and um the mean spike frequency went from uh twelve hertz at baseline up to thirty one hertz during the um during the
+  EXPECTED: The neurons in the prefrontal cortex showed increased firing rates during the task. The mean spike frequency went from 12 Hz at baseline up to 31 Hz during the decision-making phase, and that differen
+  GENERATED:The neurons in the prefrontal cortex showed increased firing rates during the task. The mean spike frequency went from 12 Hz at baseline up to 31 Hz during the decision-making phase, and that differen
+  ····························································
+
+  #9  (CER: 0.0000 | BLEU: 1.0000 | Exact: ✓ | Format: 1.00)
+  INPUT:    okay so to install the package you just run npm install dash dash save dev uh eslint
+  EXPECTED: To install the package, run `npm install --save-dev eslint`.
+  GENERATED:To install the package, run `npm install --save-dev eslint`.
+  ····························································
+
+  #10  (CER: 0.0000 | BLEU: 1.0000 | Exact: ✓ | Format: 1.00)
+  INPUT:    right so in no event shall either party be liable for any indirect incidental special exemplary or consequential damages even if uh even if such party has been advised of the possibility of such damag
+  EXPECTED: In no event shall either party be liable for any indirect, incidental, special, exemplary, or consequential damages, even if such party has been advised of the possibility of such damages.
+  GENERATED:In no event shall either party be liable for any indirect, incidental, special, exemplary, or consequential damages, even if such party has been advised of the possibility of such damages.
+  ····························································
+
+  #11  (CER: 0.0000 | BLEU: 1.0000 | Exact: ✓ | Format: 1.00)
+  INPUT:    summarise the key points from the last board meeting
+  EXPECTED: Summarise the key points from the last board meeting.
+  GENERATED:Summarise the key points from the last board meeting.
+  ····························································
+
+  #12  (CER: 0.0000 | BLEU: 1.0000 | Exact: ✓ | Format: 1.00)
+  INPUT:    the storm system moving in from the coast is expected to bring heavy rainfall and wind gusts up to sixty miles per hour residents in low lying areas are advised to evacuate before nightfall as flash f
+  EXPECTED: The storm system moving in from the coast is expected to bring heavy rainfall and wind gusts up to 60 mph. Residents in low-lying areas are advised to evacuate before nightfall, as flash flooding is h
+  GENERATED:The storm system moving in from the coast is expected to bring heavy rainfall and wind gusts up to 60 mph. Residents in low-lying areas are advised to evacuate before nightfall, as flash flooding is h
+  ····························································
+
+  #13  (CER: 0.0000 | BLEU: 1.0000 | Exact: ✓ | Format: 1.00)
+  INPUT:    so the total came out to uh four hundred and fifty no wait four hundred and fifteen dollars and we need to split it three ways
+  EXPECTED: The total came out to $415 and we need to split it three ways.
+  GENERATED:The total came out to $415 and we need to split it three ways.
+  ····························································
+
+  #14  (CER: 0.0015 | BLEU: 0.9742 | Exact: ✗ | Format: 1.00)
+  INPUT:    so michael g flood is an australian sociologist and a professor at the queensland university of technology school of justice and flood gained his doctorate in gender and sexuality studies from the aus
+  EXPECTED: Michael G. Flood is an Australian sociologist and a professor at the Queensland University of Technology School of Justice. Flood gained his doctorate in gender and sexuality studies from the Australi
+  GENERATED:Michael G. Flood is an Australian sociologist and a professor at the Queensland University of Technology School of Justice. Flood gained his doctorate in gender and sexuality studies from the Australi
+  ····························································
+
+  #15  (CER: 0.0030 | BLEU: 0.9453 | Exact: ✗ | Format: 1.00)
+  INPUT:    okay so for the confidentiality obligations uh the receiving party shall hold all confidential information in strict confidence and shall not disclose any confidential information to any third party w
+  EXPECTED: For the confidentiality obligations: the receiving party shall hold all confidential information in strict confidence and shall not disclose any confidential information to any third party without the
+  GENERATED:For the confidentiality obligations, the receiving party shall hold all confidential information in strict confidence and shall not disclose any confidential information to any third party without the
+  ····························································
+
+  #16  (CER: 0.0037 | BLEU: 0.9370 | Exact: ✗ | Format: 1.00)
+  INPUT:    so this is the confidentiality bit and uh each party agrees to keep confidential all proprietary information disclosed by the other party and uh not to disclose such information to any third party wit
+  EXPECTED: Each party agrees to keep confidential all proprietary information disclosed by the other party, and not to disclose such information to any third party without prior written consent. This obligation 
+  GENERATED:Each party agrees to keep confidential all proprietary information disclosed by the other party and not to disclose such information to any third party without prior written consent. This obligation s
+  ····························································
+
+  #17  (CER: 0.0040 | BLEU: 0.9453 | Exact: ✗ | Format: 1.00)
+  INPUT:    my dog ate a chocolate chip cookie that I dropped on the floor and I had to rush him to the emergency vet they induced vomiting and gave him some activated charcoal he is totally fine now but the whol
+  EXPECTED: My dog ate a chocolate chip cookie that I dropped on the floor, and I had to rush him to the emergency vet. They induced vomiting and gave him some activated charcoal. He is totally fine now, but the 
+  GENERATED:My dog ate a chocolate chip cookie that I dropped on the floor and I had to rush him to the emergency vet. They induced vomiting and gave him some activated charcoal. He is totally fine now, but the w
+  ····························································
+
+  #18  (CER: 0.0065 | BLEU: 0.9354 | Exact: ✗ | Format: 1.00)
+  INPUT:    dear mister uh patel comma new paragraph following up on our conversation from last week uh the proposal has been approved and we're looking at a budget of uh seventy five thousand dollars for the pro
+  EXPECTED: Dear Mr. Patel,
+
+Following up on our conversation from last week — the proposal has been approved and we're looking at a budget of $75,000 for the project.
+
+We'd like to get started as soon as possibl
+  GENERATED:Dear Mr. Patel,
+
+Following up on our conversation from last week, the proposal has been approved and we're looking at a budget of $75,000 for the project.
+
+We'd like to get started as soon as possible
+  ····························································
+
+  #19  (CER: 0.0088 | BLEU: 0.9889 | Exact: ✗ | Format: 1.00)
+  INPUT:    dear uh search committee comma new paragraph I am pleased to uh submit my application for the position of director of operations new paragraph with uh fifteen years of experience in logistics and uh s
+  EXPECTED: Dear Search Committee,
+
+I am pleased to submit my application for the position of Director of Operations.
+
+With 15 years of experience in logistics and supply chain management, I have consistently del
+  GENERATED:Dear Search Committee,
+
+I am pleased to submit my application for the position of Director of Operations. With 15 years of experience in logistics and supply chain management, I have consistently deli
+  ····························································
+
+  #20  (CER: 0.0100 | BLEU: 0.8453 | Exact: ✗ | Format: 1.00)
+  INPUT:    the cronbach's alpha for our primary scale was point eight nine which indicates good internal consistency and we also ran a confirmatory factor analysis and the fit indices were uh CFI equals point ni
+  EXPECTED: The Cronbach's alpha for our primary scale was 0.89, indicating good internal consistency. We also ran a confirmatory factor analysis and the fit indices were CFI = 0.96, RMSEA = 0.05, and SRMR = 0.04
+  GENERATED:The Cronbach's alpha for our primary scale was 0.89, indicating good internal consistency. We also ran a confirmatory factor analysis, and the fit indices were: CFI = 0.96, RMSEA = 0.05, and SRMR = 0.
+  ····························································
