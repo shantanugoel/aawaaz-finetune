@@ -608,7 +608,7 @@ def _quantize_model(
     cmd = [
         sys.executable,
         "-m",
-        "mlx_lm.convert",
+        "mlx_lm", "convert",
         "--hf-path",
         str(source_dir),
         "--mlx-path",

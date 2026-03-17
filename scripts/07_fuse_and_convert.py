@@ -363,14 +363,14 @@ def _fuse_mac(
 
     # Build mlx_lm.fuse command
     cmd = [
-        sys.executable, "-m", "mlx_lm.fuse",
+        sys.executable, "-m", "mlx_lm", "fuse",
         "--model", model_source,
         "--adapter-path", str(adapter_dir),
         "--save-path", str(fused_dir),
     ]
 
     if de_quantize:
-        cmd.append("--de-quantize")
+        cmd.append("--dequantize")
 
     logger.info("mlx_lm.fuse command:\n  %s", " ".join(cmd))
 
@@ -480,7 +480,7 @@ def _convert_hf_to_mlx(
     logger.info("  Output: %s", mlx_dir)
 
     cmd = [
-        sys.executable, "-m", "mlx_lm.convert",
+        sys.executable, "-m", "mlx_lm", "convert",
         "--hf-path", str(fused_dir),
         "--mlx-path", str(mlx_dir),
     ]
