@@ -133,7 +133,7 @@ def _check_prerequisites_mac() -> None:
         )
     # Also verify that mlx_lm.lora CLI entry point is available
     result = subprocess.run(
-        [sys.executable, "-m", "mlx_lm.lora", "--help"],
+        [sys.executable, "-m", "mlx_lm", "lora", "--help"],
         capture_output=True,
         text=True,
     )
@@ -651,12 +651,12 @@ def _train_mac(
 
     # ── Build mlx_lm.lora command ───────────────────────────────────────
     cmd = [
-        sys.executable, "-m", "mlx_lm.lora",
+        sys.executable, "-m", "mlx_lm", "lora",
         "--model", model_source,
         "--data", str(DATA_COMBINED),
         "--train",
         "--batch-size", str(mac.batch_size),
-        "--lora-layers", str(mac.lora_layers),
+        "--num-layers", str(mac.lora_layers),
         "--iters", str(mac.iters),
         "--learning-rate", str(mac.learning_rate),
         "--adapter-path", str(adapter_dir),
