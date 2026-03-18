@@ -1,15 +1,35 @@
 # Synthetic Data Generation — Agent Instructions
 
-## Your Mission
+## Mission
 
-You are generating synthetic training data for **Aawaaz**, a speech transcript cleanup
-model. Create realistic pairs of:
+You are the **category orchestrator** for generating synthetic training data for
+**Aawaaz**, a speech transcript cleanup model. You manage the batch
+generation-validation loop for ONE category, spawning fresh sub-agents for each batch.
+
+Each batch produces realistic pairs of:
 - **input**: A messy speech-to-text (ASR/Whisper) transcript
 - **output**: The properly cleaned and formatted version
 
-You will generate data for ONE specific category (defined in the category-specific
-section of your instructions). Generate in batches, validate each batch, fix
-failures, and continue until you reach the target count.
+This file serves two purposes:
+1. **Orchestrator workflow** (the "Your Role" and "Workflow" sections) — instructions
+   for you, the category orchestrator
+2. **Quality reference** (all other sections) — guidance that generation sub-agents
+   read to understand what makes good data
+
+## Your Role
+
+You are a **loop controller**, not a data generator. You NEVER generate
+transcript-cleanup pairs yourself. Instead, for each batch you:
+
+1. Spawn a **generation sub-agent** (using `generation_model`) with a fresh context
+2. Spawn a **validation sub-agent** (using `validation_model`) with a fresh context
+3. Process the results: append passing pairs, collect failure reasons
+4. Repeat until the target is reached
+
+**Why this matters**: For 2000 pairs at batch_size=50, that's ~40 batches. If a single
+agent generated all of them, its context would be stuffed with prior batches by the end,
+causing repetitive patterns and quality degradation. By spawning a fresh sub-agent per
+batch, batch 40 gets the same quality as batch 1.
 
 ## Parameters
 
@@ -19,7 +39,8 @@ These are passed in by the orchestrator or the user. Use defaults if not provide
 |-----------|---------|-------------|
 | target_count | 200 | Total number of pairs to generate for this category |
 | batch_size | 50 | Number of pairs to generate per generation-validation cycle |
-| validation_model | (a different model) | Model used for validation — should differ from generation model |
+| generation_model | (specified by master/user) | Model for generation sub-agents — the model doing the creative work |
+| validation_model | (a different model) | Model for validation sub-agents — should differ from generation model |
 | output_file | data/prepared/[category_name].jsonl | Where to write the generated pairs |
 
 ## Understanding the Task
@@ -175,55 +196,80 @@ Before generating anything:
 4. If remaining <= 0, report "Already at target" and stop
 5. If remaining > 0, report "Found N existing pairs, generating M more"
 
-### Step 1: Generate a Batch
+Initialize batch_number = 1 and track failure_reasons = [] (empty for the first batch).
 
-Create `batch_size` pairs (or fewer if close to target). Follow the category-specific
-guidance closely. Focus on:
+### Step 1: Spawn Generation Sub-Agent
+
+For each batch, spawn a **new sub-agent** with the **generation_model**. Each sub-agent
+gets a fresh context — it has never seen any prior batches.
+
+Calculate this_batch_size = min(batch_size, remaining).
+
+Instruct the sub-agent:
+
+```
+Read prompts/agent/generate.md (the quality guidance sections: "Understanding the Task",
+"What Makes a REALISTIC Transcript", "What Makes a GOOD Cleanup", "Output Format", and
+"Diversity Guidelines") and prompts/agent/categories/[category_name].md.
+
+Generate [this_batch_size] transcript-cleanup pairs for the [category_name] category.
+Follow the quality guidance and category-specific instructions closely.
+
+Focus on:
 - Diversity: vary names, numbers, lengths, complexity, speech patterns
 - Realism: every input must pass the "read it aloud" test
 - Accuracy: every output must preserve all content from its input
 
-Write the pairs as JSONL text. Hold them for validation before appending to the file.
+[If failure_reasons is non-empty, include:]
+The following pairs were rejected in a previous batch. Generate replacements that
+address the specific failure reasons — do NOT repeat these mistakes:
+[list failure_reasons]
 
-### Step 2: Validate the Batch
+Return ONLY the pairs as JSONL text (one JSON object per line, each with "input" and
+"output" string fields). Do NOT write to any file — return the JSONL content directly.
+No commentary before or after the JSONL.
+```
 
-Send the batch to the **validation_model** for evaluation. This should be done in a
-**separate context** (a sub-agent, a separate conversation, or a distinct model call)
-so the validator reviews with fresh eyes — not the same context that generated the data.
+Collect the returned JSONL text. Hold it for validation before appending to the file.
 
-Provide the validator with:
-- The validation criteria from `prompts/agent/validate.md` (either include the content
-  or instruct the validator to read that file)
-- The batch pairs to evaluate (numbered, as JSON objects)
+### Step 2: Spawn Validation Sub-Agent
 
-The validator should return a JSON evaluation object with per-pair pass/fail results
-and a summary. See `validate.md` for the exact schema.
+Spawn a **new sub-agent** with the **validation_model**. This sub-agent gets a fresh
+context and has never seen the generation instructions or prior batches.
 
-**Using a different model for validation** (recommended): If the user specified a
-validation_model different from the generation model (e.g., generation with Claude
-Opus, validation with GPT 5.4), use that model for the validation step. This avoids
-self-preference bias — the generator doesn't judge its own work.
+Instruct the sub-agent:
+
+```
+Read prompts/agent/validate.md for the evaluation criteria and expected output format.
+
+Evaluate the following transcript-cleanup pairs. For each pair, assess all 4 criteria
+defined in validate.md. Return ONLY a JSON evaluation object following the exact schema
+defined in validate.md. No commentary before or after the JSON.
+
+Pairs to evaluate:
+[include the batch pairs here, numbered starting from 0]
+```
+
+Collect the returned JSON evaluation.
 
 ### Step 3: Process Validation Results
 
 Parse the validation JSON:
 
 - **Passing pairs**: Append to the output file immediately
-- **Failing pairs**: Note the failure reasons. You will generate replacements.
-- **Report**: "Batch N: X/Y passed. Total: Z/target_count"
+- **Failing pairs**: Collect their failure reasons (from the `note` fields). These will
+  be included in the next generation sub-agent's prompt.
+- **Update remaining**: remaining = target_count - total_pairs_in_output_file
+- **Report**: "Batch [batch_number]: X/Y passed. Total: Z/target_count"
 
-### Step 4: Fix and Continue
+### Step 4: Loop
 
-If pairs failed:
-- Read the failure reasons carefully
-- Generate replacement pairs that address the specific failures
-- Common fixes:
-  - "input not realistic" → Make the transcript more speech-like, less written
-  - "content not preserved" → Ensure all facts from input appear in output
-  - "hallucination detected" → Remove any added content in output
-  - "corrections not applied" → Apply all cleanup rules properly
+If remaining > 0:
+- Increment batch_number
+- Set failure_reasons to the collected failure notes from Step 3 (or empty if all passed)
+- Go back to Step 1 with a fresh generation sub-agent
 
-Loop back to Step 1 until target_count pairs are in the output file.
+Repeat until target_count pairs are in the output file.
 
 ### Step 5: Completion
 

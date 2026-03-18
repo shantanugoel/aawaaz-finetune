@@ -54,8 +54,10 @@ All parameters have sensible defaults. Specify only what you want to override.
 |-----------|---------|-------------|
 | generation_model | (current model) | Model for generating data |
 | validation_model | (a different model) | Model for validating — should differ from generation model |
+| orchestrator_model | claude-sonnet-4.6 | Model for category orchestrator agents (loop controllers, not data generation) |
 | target_per_category | 200 | Number of pairs to generate per category |
 | batch_size | 50 | Pairs per generation-validation cycle |
+| max_concurrent | 3 | Max category orchestrators running simultaneously (rate limit control) |
 | category_type | all | Which types to run: `core`, `domain_specific`, or `all` |
 | categories | (from type) | Comma-separated list — overrides category_type |
 
@@ -75,12 +77,15 @@ validation model, and loops until the target is reached.
 
 ```
 Read prompts/agent/master.md and execute.
-Generation model: claude-opus-4-6. Validation model: gpt-5.4.
-Target per category: 2000. Batch size: 50.
+Generation model: claude-opus-4.6. Validation model: gpt-5.4.
+Orchestrator model: claude-sonnet-4.6.
+Target per category: 2000. Batch size: 50. Max concurrent: 3.
 ```
 
-The master prompt fans out one task per category (in parallel if the agent supports
-it), waits for all to complete, then runs a final cross-category quality review.
+The master prompt pre-checks output files (skipping completed categories), then queues
+the remaining categories and runs up to `max_concurrent` orchestrators simultaneously.
+Each orchestrator spawns fresh generation and validation sub-agents per batch. When one
+finishes, the next category in the queue starts automatically.
 
 ### Generate only Core or Domain Specific categories
 
@@ -116,7 +121,7 @@ dataset. This keeps quality consistent across thousands of pairs.
 ```
 ┌─────────────────────────────────────────────────────────┐
 │  User                                                   │
-│  "Read master.md, target 2000, model: opus, val: gpt"   │
+│  "Read master.md, target 2000, gen: opus, val: gpt"     │
 └──────────────────────┬──────────────────────────────────┘
                        │
                        ▼
@@ -132,21 +137,22 @@ dataset. This keeps quality consistent across thousands of pairs.
 └──┬───┘└──┬───┘└──┬───┘└──┬───┘└──┬───┘         └──┬───┘
    │       │       │       │       │                 │
    ▼       ▼       ▼       ▼       ▼                 ▼
-  Each category agent runs the batch loop:
+  Each category orchestrator (orchestrator_model)
+  runs the batch loop, spawning fresh sub-agents:
   ┌───────────────────────────────────────────────┐
-  │  Category Agent  (loop controller)            │
+  │  Category Orchestrator  (loop controller)     │
   │  For each batch of 50:                        │
   │                                               │
   │  ┌─────────────────────┐  fresh context       │
   │  │  Generate Sub-Agent  │◄── per batch        │
-  │  │  (generation model)  │                     │
+  │  │  (generation_model)  │                     │
   │  │  Creates 50 pairs    │                     │
   │  └─────────┬───────────┘                      │
   │            │                                  │
   │            ▼                                  │
   │  ┌─────────────────────┐  fresh context       │
   │  │  Validate Sub-Agent  │◄── per batch        │
-  │  │  (validation model)  │                     │
+  │  │  (validation_model)  │                     │
   │  │  Scores each pair    │                     │
   │  └─────────┬───────────┘                      │
   │            │                                  │
@@ -161,6 +167,12 @@ dataset. This keeps quality consistent across thousands of pairs.
 batches. Each generation and validation call gets a fresh context window with only
 the category prompt + 50 pairs. No context grows unbounded, so batch 40 is the
 same quality as batch 1.
+
+**Three-level hierarchy:** The master agent spawns category orchestrators (one per
+category, using the orchestrator_model). Each orchestrator is a loop controller that
+spawns fresh generation sub-agents (generation_model) and validation sub-agents
+(validation_model) per batch. The orchestrator itself never generates or evaluates
+data — it only manages the loop, tracks progress, and appends passing pairs.
 
 ## Model Selection
 
@@ -257,9 +269,15 @@ done
 
 ## Resume Behavior
 
-Each category task checks its output file before starting. If the file exists with N
-pairs already generated, it only generates the remaining (target - N) pairs. Re-running
-after a partial failure or interruption automatically resumes.
+Resume works at two levels:
+
+1. **Category-level**: The master pre-checks each output file before launching
+   orchestrators. Categories already at target are skipped entirely (no agent spawned).
+2. **Batch-level**: Each category orchestrator checks its output file and only generates
+   the remaining pairs.
+
+Re-running after a partial failure or interruption automatically skips completed
+categories and resumes incomplete ones from where they left off.
 
 ## Tips
 
@@ -267,8 +285,9 @@ after a partial failure or interruption automatically resumes.
   master orchestration.
 - **Check quality early**: Read the first batch of output manually. If the transcripts
   don't sound like real speech, adjust your instructions.
-- **Fresh context per category**: For large runs (1000+ per category), start a new
-  agent session for each category to avoid context degradation.
+- **Fresh context by design**: The architecture spawns fresh sub-agents per batch
+  automatically. Category orchestrators accumulate only batch summaries (pass/fail
+  counts), not the generated data itself.
 - **Different models per category**: Run categories individually with different models.
   Use your best model for hard categories (creative_writing, self_corrections_heavy)
   and a cheaper one for easier ones.

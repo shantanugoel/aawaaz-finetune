@@ -14,14 +14,18 @@ The user should specify these when invoking. Use defaults if not provided.
 |-----------|---------|-------------|
 | generation_model | (current model) | Model for generating data (e.g., `claude-opus-4-6`, `gpt-5.4`) |
 | validation_model | (a different model) | Model for validating data — should differ from generation_model to avoid self-preference bias |
+| orchestrator_model | claude-sonnet-4.6 | Model for category orchestrator agents — these are loop controllers that don't generate data, so a capable but cheaper model works well |
 | target_per_category | 200 | Number of pairs to generate per category |
 | batch_size | 50 | Pairs per generation-validation cycle |
+| max_concurrent | 3 | Maximum number of category orchestrators running simultaneously — controls rate limit pressure |
 | category_type | all | Which category types to run: `core`, `domain_specific`, or `all` |
 | categories | (from type) | Comma-separated list to override type-based selection with specific categories |
 
 **Choosing models**: Using different model families for generation vs. validation
 produces the best results (e.g., Claude for generation, GPT for validation — or vice
-versa). This avoids the generator judging its own work favorably.
+versa). This avoids the generator judging its own work favorably. The orchestrator
+model can be a cheaper model (like Sonnet 4.6) since it only manages the batch loop —
+it never generates or evaluates data itself.
 
 ---
 
@@ -57,35 +61,80 @@ Report: "Found N categories (type: [type]): [list]"
 
 Create `data/prepared/` if it doesn't exist.
 
-### Step 3: Fan Out — One Task Per Category
+### Step 3: Pre-Check — Skip Completed Categories
 
-For EACH category, start a generation task using the **generation_model**. If your
-agent system supports parallel execution (background agents, concurrent tasks, etc.),
-launch all categories simultaneously. Otherwise, process them sequentially.
+Before launching any orchestrators, check each category's output file to avoid
+unnecessary work:
 
-Each category task should receive:
+For each category in the list:
+1. Check if `data/prepared/[category_name].jsonl` exists
+2. If yes, count the lines (each line = one pair)
+3. If line count >= `target_per_category`, mark this category as **already complete**
+
+Partition the category list into:
+- **complete**: already at or above target — these will be skipped entirely
+- **pending**: need work (file missing, partially done, or empty)
+
+Report:
+```
+Pre-check results:
+- Complete (skipped): [list or "none"]
+- Pending (will generate): [list]
+```
+
+If all categories are complete, skip to Step 7 (report).
+
+### Step 4: Queue and Launch — Concurrent Category Orchestrators
+
+Use a queue to control how many category orchestrators run simultaneously, respecting
+the `max_concurrent` parameter. This prevents hitting API rate limits when generation
+and validation sub-agents are making model calls.
+
+**Queue logic:**
+
+1. Place all **pending** categories into a queue (ordered as discovered)
+2. Launch up to `max_concurrent` category orchestrators from the front of the queue
+3. As each orchestrator **completes** (success or failure):
+   - Note its result (category name, success/failure, pairs generated)
+   - If the queue is not empty, launch the next category from the queue
+4. Repeat until the queue is empty and all running orchestrators have finished
+
+Each category orchestrator task should receive:
 
 ```
-Read prompts/agent/categories/[category_name].md and follow its instructions.
+Read prompts/agent/generate.md and prompts/agent/categories/[category_name].md.
+Follow the orchestrator workflow defined in generate.md.
 
 Parameters for this run:
 - target_count: [target_per_category]
 - batch_size: [batch_size]
+- generation_model: [generation_model]
 - validation_model: [validation_model]
 - output_file: data/prepared/[category_name].jsonl
 ```
 
-The category prompt will direct the agent to also read `prompts/agent/generate.md`
-for base instructions and `prompts/agent/validate.md` for validation criteria.
+**Important**: The category orchestrator does NOT generate data itself. It runs the
+batch loop and spawns fresh sub-agents (using the generation_model and
+validation_model) for each batch. This keeps every batch in a clean context window.
 
-### Step 4: Wait for Completion
+The category orchestrator reads `generate.md` for its workflow and spawns sub-agents
+that also read `generate.md` (for quality guidance) and `validate.md` (for evaluation
+criteria).
 
-Wait for all category tasks to finish. As each completes, note:
+**Progress reporting**: As orchestrators complete and new ones launch, report:
+```
+[category_name] complete (N pairs). Queue: M remaining, K running.
+Launching: [next_category_name]
+```
+
+### Step 5: Wait for All Orchestrators
+
+Wait for all category orchestrators to finish. Track the final results for each:
 - Category name
 - Success/failure
 - Number of pairs generated (from the task's report)
 
-### Step 5: Final Review
+### Step 6: Final Review
 
 Once all category tasks have completed:
 
@@ -94,7 +143,7 @@ Once all category tasks have completed:
    cross-category quality check across all files in `data/prepared/`
 3. Wait for the review to complete
 
-### Step 6: Report to User
+### Step 7: Report to User
 
 Summarize the full run:
 
@@ -106,9 +155,10 @@ Summarize the full run:
 |----------|--------|-----------|--------|
 | casual_conversation | 200 | 200 | Done |
 | email_professional | 200 | 198 | Done |
+| shopping_lists | 200 | 200 | Skipped (already complete) |
 | ... | ... | ... | ... |
 
-### Total: XXXX pairs across N categories
+### Total: XXXX pairs across N categories (M skipped, K generated this run)
 ### Output: data/prepared/*.jsonl
 
 ### Final Review: [PASS/NEEDS_ATTENTION/FAIL]
@@ -129,6 +179,14 @@ and suggest re-running just those categories individually.
 
 ## Resume Behavior
 
-Each category task independently checks its output file for existing pairs and only
-generates the remaining count. So re-running the master prompt after a partial failure
-will skip already-completed categories and resume incomplete ones.
+The master prompt handles resume at two levels:
+
+1. **Category-level skip** (Step 3): Before launching any orchestrators, the master
+   checks each output file. Categories already at target are skipped entirely — no
+   orchestrator agent is spawned for them.
+
+2. **Batch-level resume** (in generate.md Step 0): Each category orchestrator checks
+   its output file for existing pairs and only generates the remaining count.
+
+So re-running after a partial failure will skip completed categories and resume
+incomplete ones from where they left off.
