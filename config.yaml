@@ -98,7 +98,7 @@ training:
 
   # LoRA config
   lora:
-    rank: 32                    # r — higher for small models
+    rank: 8                    # r — higher for small models
     alpha: 64                   # Scaling factor (typically 2x rank)
     dropout: 0.0
     target_modules:             # Which layers to adapt
