@@ -126,7 +126,7 @@ training:
     learning_rate: 1e-5
     batch_size: 4
     lora_layers: 16             # MLX-specific: number of layers to apply LoRA
-    iters: 1500                 # MLX uses iters instead of epochs
+    iters: 3000                 # MLX uses iters instead of epochs
     grad_accumulation_steps: 4
     grad_checkpoint: true       # Trade compute for memory
 

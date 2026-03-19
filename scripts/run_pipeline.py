@@ -138,7 +138,7 @@ _step_defs = [
         script="09_evaluate.py",
         name="Evaluate models",
         deps=["8"],
-        forwards={"model", "force"},
+        forwards={"model", "force", "base"},
     ),
     StepDef(
         step_id="10",
@@ -346,6 +346,7 @@ _ARG_TO_FLAG: dict[str, str] = {
     "synthetic_samples": "--synthetic-samples",
     "sample_rate": "--sample-rate",
     "yes": "--yes",
+    "base": "--base",
 }
 
 
@@ -563,6 +564,13 @@ def parse_args(argv: list[str] | None = None) -> Any:
         help="Override validation sample rate (forwarded to step 3b).",
     )
     parser.add_argument(
+        "--base",
+        action="store_true",
+        default=False,
+        help="Evaluate the base (pre-finetune) model instead of the quantized model. "
+        "Forwarded to step 9.",
+    )
+    parser.add_argument(
         "--clear-state",
         action="store_true",
         help="Clear pipeline state (.pipeline_state.json) and exit.",
@@ -613,6 +621,10 @@ def main(argv: list[str] | None = None) -> int:
     except (FileNotFoundError, ValueError, yaml.YAMLError) as exc:
         log.error("Failed to load config: %s", exc)
         return 1
+
+    # Adjust step 9 deps when evaluating the base model (no quantized model needed).
+    if args.base:
+        STEPS["9"].deps = ["5"]
 
     # Adjust step 4 deps based on validation config.
     step4 = STEPS["4"]
@@ -724,6 +736,8 @@ def main(argv: list[str] | None = None) -> int:
         overrides["sample_rate"] = args.sample_rate
     if args.resume:
         overrides["resume"] = True
+    if args.base:
+        overrides["base"] = True
     # When orchestrating, auto-confirm prompts in child scripts.
     overrides["yes"] = True
 

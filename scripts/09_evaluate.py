@@ -24,6 +24,7 @@ from typing import Any
 from common import (
     DATA_COMBINED,
     EVAL_RESULTS,
+    MODELS_BASE,
     MODELS_QUANTIZED,
     ModelConfig,
     PipelineConfig,
@@ -122,6 +123,11 @@ def parse_args(argv: list[str] | None = None) -> "argparse.Namespace":
         "--force",
         action="store_true",
         help="Overwrite existing evaluation results without prompting.",
+    )
+    parser.add_argument(
+        "--base",
+        action="store_true",
+        help="Evaluate the base (pre-finetune) model instead of the quantized model.",
     )
     parser.add_argument(
         "--num-samples",
@@ -893,17 +899,24 @@ def _evaluate_model(
     num_samples_override: int | None = None,
     force: bool = False,
     dry_run: bool = False,
+    base: bool = False,
 ) -> dict[str, Any]:
     """Evaluate a single model."""
-    bits = cfg.quantization.bits
-    model_dir_name = f"{mcfg.name}-{bits}bit"
-    model_path = MODELS_QUANTIZED / model_dir_name
-    output_dir = EVAL_RESULTS / mcfg.name
+    if base:
+        model_path = MODELS_BASE / mcfg.name
+        eval_label = f"base_{mcfg.name}"
+        output_dir = EVAL_RESULTS / eval_label
+    else:
+        bits = cfg.quantization.bits
+        model_dir_name = f"{mcfg.name}-{bits}bit"
+        model_path = MODELS_QUANTIZED / model_dir_name
+        eval_label = mcfg.name
+        output_dir = EVAL_RESULTS / eval_label
 
     num_samples = num_samples_override or cfg.evaluation.num_samples
 
-    logger.info("Evaluating model: %s", mcfg.name)
-    logger.info("  Quantized model:  %s", model_path)
+    logger.info("Evaluating model: %s%s", mcfg.name, " (base)" if base else "")
+    logger.info("  Model path:       %s", model_path)
     logger.info("  Output dir:       %s", output_dir)
     logger.info("  Num samples:      %d", num_samples)
     logger.info("  Temperature:      %.1f", cfg.evaluation.temperature)
@@ -912,15 +925,15 @@ def _evaluate_model(
     # Handle dry-run early (before requiring model to exist)
     if dry_run:
         if not model_path.exists():
-            logger.info("[DRY-RUN] Quantized model not yet present: %s", model_path)
-        logger.info("[DRY-RUN] Would evaluate %s with %d samples.", mcfg.name, num_samples)
-        return {"status": "dry-run", "model": mcfg.name}
+            logger.info("[DRY-RUN] Model not yet present: %s", model_path)
+        logger.info("[DRY-RUN] Would evaluate %s with %d samples.", eval_label, num_samples)
+        return {"status": "dry-run", "model": eval_label}
 
     # Check model exists and looks valid
     if not model_path.exists():
+        hint = "Run 05_download_models.py first." if base else "Run 08_quantize.py first."
         raise FileNotFoundError(
-            f"Quantized model not found: {model_path}. "
-            "Run 08_quantize.py first."
+            f"Model not found: {model_path}. {hint}"
         )
     _verify_model_dir(model_path)
 
@@ -965,18 +978,18 @@ def _evaluate_model(
 
     # Save reports
     _save_json_report(
-        output_dir, mcfg.name, str(model_path), cfg, num_samples,
+        output_dir, eval_label, str(model_path), cfg, num_samples,
         metrics, best, worst, results,
     )
-    _save_text_report(output_dir, mcfg.name, metrics, best, worst)
+    _save_text_report(output_dir, eval_label, metrics, best, worst)
 
     logger.info(
-        "Evaluation complete for %s in %.1f seconds.", mcfg.name, eval_elapsed
+        "Evaluation complete for %s in %.1f seconds.", eval_label, eval_elapsed
     )
 
     return {
         "status": "completed",
-        "model": mcfg.name,
+        "model": eval_label,
         "output_dir": str(output_dir),
         "num_samples": len(results),
         "eval_seconds": round(eval_elapsed, 1),
@@ -1032,6 +1045,7 @@ def main() -> None:
                 num_samples_override=args.num_samples,
                 force=args.force,
                 dry_run=args.dry_run,
+                base=args.base,
             )
             all_results.append(result)
         except Exception as exc:

@@ -75,6 +75,9 @@ python scripts/run_pipeline.py --all --dry-run
 # Resume after interruption (skips completed steps)
 python scripts/run_pipeline.py --all --resume
 
+# Evaluate the base model (before fine-tuning) for comparison
+python scripts/run_pipeline.py --steps 9 --model qwen3-0.6b --base
+
 # Upload to HuggingFace (must be run explicitly)
 python scripts/run_pipeline.py --steps 10
 ```
@@ -104,7 +107,7 @@ All scripts support `--verbose`, `--dry-run`, and `--config <path>` flags.
 | 6 | `06_finetune.py` | LoRA fine-tuning (Unsloth on Linux, MLX on Mac) |
 | 7 | `07_fuse_and_convert.py` | Fuse LoRA adapters into base model |
 | 8 | `08_quantize.py` | Quantize to 4-bit MLX format |
-| 9 | `09_evaluate.py` | Evaluate on test set (CER, BLEU, exact match, format accuracy) |
+| 9 | `09_evaluate.py` | Evaluate on test set (CER, BLEU, exact match, format accuracy). Use `--base` to evaluate the pre-finetune model |
 | 10 | `10_upload.py` | Upload quantized model to HuggingFace Hub |
 
 ## Project Structure
