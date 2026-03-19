@@ -159,7 +159,7 @@ hf auth login
 
 # Upload prepared data as a dataset repo
 hf upload <hf_username>/aawaaz-transcript-cleanup data/prepared/ \
-  --type dataset
+  --type dataset --exclude ".gitkeep"
 
 # To update after adding more data, just re-run the same command
 ```
