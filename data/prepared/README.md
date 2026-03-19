@@ -3,7 +3,7 @@ language:
   - en
 license: mit
 task_categories:
-  - text2text-generation
+  - text-generation
 tags:
   - speech-transcript-cleanup
   - asr-post-processing
