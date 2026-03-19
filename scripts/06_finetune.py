@@ -649,6 +649,27 @@ def _train_mac(
 
     adapter_dir.mkdir(parents=True, exist_ok=True)
 
+    # ── Build MLX LoRA YAML config for lora_parameters ──────────────────
+    # MLX CLI doesn't expose LoRA rank/alpha/dropout as CLI flags;
+    # they must be passed via a YAML config file.
+    import yaml
+
+    lora_scale = tr.lora.alpha / tr.lora.rank if tr.lora.rank > 0 else 20.0
+    mlx_yaml_config = {
+        "lora_parameters": {
+            "rank": tr.lora.rank,
+            "dropout": tr.lora.dropout,
+            "scale": lora_scale,
+        },
+    }
+    mlx_config_path = adapter_dir / "mlx_lora_config.yaml"
+    with open(mlx_config_path, "w", encoding="utf-8") as fh:
+        yaml.dump(mlx_yaml_config, fh, default_flow_style=False)
+    logger.info(
+        "MLX LoRA config: rank=%d, scale=%.1f, dropout=%.2f → %s",
+        tr.lora.rank, lora_scale, tr.lora.dropout, mlx_config_path,
+    )
+
     # ── Build mlx_lm.lora command ───────────────────────────────────────
     cmd = [
         sys.executable, "-m", "mlx_lm", "lora",
@@ -662,6 +683,7 @@ def _train_mac(
         "--adapter-path", str(adapter_dir),
         "--steps-per-eval", str(tr.eval_every),
         "--save-every", str(tr.save_every),
+        "-c", str(mlx_config_path),
     ]
 
     if tr.mask_prompt:
