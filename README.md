@@ -99,7 +99,7 @@ All scripts support `--verbose`, `--dry-run`, and `--config <path>` flags.
 | 2 | `02_pull_datasets.py` | Download transcript cleanup datasets from HuggingFace |
 | 3 | `03_generate_synthetic.py` | Generate synthetic training pairs via LLM API |
 | 3b | `03b_validate_synthetic.py` | LLM-as-judge quality gate on synthetic data |
-| 4 | `04_prepare_data.py` | Combine, deduplicate, format, and split into train/valid/test |
+| 4 | `04_prepare_data.py` | Combine (raw + synthetic + prepared), deduplicate, format, and split into train/valid/test |
 | 5 | `05_download_models.py` | Download base Qwen3 models from HuggingFace |
 | 6 | `06_finetune.py` | LoRA fine-tuning (Unsloth on Linux, MLX on Mac) |
 | 7 | `07_fuse_and_convert.py` | Fuse LoRA adapters into base model |
@@ -121,7 +121,8 @@ aawaaz-finetune/
 │   └── llm_client.py            # Multi-provider LLM client
 ├── data/
 │   ├── raw/                     # Downloaded HF datasets
-│   ├── synthetic/               # Generated + validated synthetic data
+│   ├── synthetic/               # Generated + validated synthetic data (script-based)
+│   ├── prepared/                # Agent-generated, pre-validated training pairs
 │   └── combined/                # Final train/valid/test splits
 ├── models/
 │   ├── base/                    # Downloaded base models
@@ -143,6 +144,49 @@ aawaaz-finetune/
 | **Final output** | 4-bit quantized MLX model | 4-bit quantized MLX model |
 
 **Cross-platform workflow**: Fine-tune on Linux (faster with NVIDIA GPU), then transfer the fused model to Mac for quantization and evaluation. Use `--convert-only` in step 7 on Mac to convert a Linux-fused model to MLX format.
+
+## Uploading to HuggingFace
+
+Dataset and model are uploaded to separate HuggingFace repos.
+
+### Upload training dataset
+
+Upload prepared training data **before** fine-tuning so it's versioned and preserved regardless of training outcome.
+
+```bash
+# Login (one-time)
+huggingface-cli login
+
+# Upload prepared data as a dataset repo
+huggingface-cli upload <hf_username>/aawaaz-transcript-cleanup data/prepared/ \
+  --repo-type dataset
+
+# To update after adding more data, just re-run the same command
+```
+
+Once uploaded, others can download it by adding to `config.yaml`:
+```yaml
+dataset:
+  hf_datasets:
+    - repo: "<hf_username>/aawaaz-transcript-cleanup"
+      input_col: "input"
+      output_col: "output"
+      enabled: true
+```
+
+### Upload fine-tuned model
+
+After training, fusing, quantizing, and evaluating (steps 6–9):
+
+```bash
+# Preview what would be uploaded
+python scripts/10_upload.py --model qwen3-0.6b --dry-run
+
+# Upload quantized model with auto-generated model card
+python scripts/10_upload.py --model qwen3-0.6b --verbose
+```
+
+This creates a repo like `<hf_username>/aawaaz-qwen3-0.6b-transcriber-4bit` with the quantized weights, model card, eval metrics, and system prompt.
 
 ## Key Design Decisions
 

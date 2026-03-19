@@ -39,6 +39,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from common import (
     DATA_COMBINED,
+    DATA_PREPARED,
     DATA_RAW,
     DATA_SYNTHETIC,
     DATA_SYNTHETIC_REJECTED,
@@ -334,6 +335,39 @@ def load_synthetic_data(
     return pairs
 
 
+def load_prepared_data() -> list[RawPair]:
+    """Load all JSONL files from ``data/prepared/``.
+
+    These are agent-generated, pre-validated pairs in ``{"input": ..., "output": ...}``
+    format. Each file maps to a category by its stem name.
+    """
+    pairs: list[RawPair] = []
+    if not DATA_PREPARED.exists():
+        logger.warning("Prepared data directory does not exist: %s", DATA_PREPARED)
+        return pairs
+
+    jsonl_files = sorted(DATA_PREPARED.glob("*.jsonl"))
+    if not jsonl_files:
+        logger.warning("No JSONL files found in %s", DATA_PREPARED)
+        return pairs
+
+    for path in jsonl_files:
+        category = path.stem
+        source_name = f"prepared/{category}"
+        records = _load_jsonl(path)
+        for rec in records:
+            inp = rec.get("input", "")
+            out = rec.get("output", "")
+            pairs.append(
+                RawPair(
+                    input=inp, output=out, source=source_name, category=category
+                )
+            )
+        logger.info("Loaded %d pairs from %s", len(records), path.name)
+
+    return pairs
+
+
 # ── Deduplication ───────────────────────────────────────────────────────────
 
 
@@ -489,8 +523,14 @@ def main(argv: list[str] | None = None) -> int:
             if DATA_SYNTHETIC.exists()
             else []
         )
+        prepared_files = (
+            sorted(DATA_PREPARED.glob("*.jsonl"))
+            if DATA_PREPARED.exists()
+            else []
+        )
         log.info("[DRY-RUN] Raw files: %s", [f.name for f in raw_files])
         log.info("[DRY-RUN] Synthetic files: %s", [f.name for f in synth_files])
+        log.info("[DRY-RUN] Prepared files: %s", [f.name for f in prepared_files])
         return 0
 
     # ── Check for existing output ──
@@ -526,7 +566,11 @@ def main(argv: list[str] | None = None) -> int:
     )
     log.info("Total synthetic pairs: %d", len(synthetic_pairs))
 
-    all_pairs = raw_pairs + synthetic_pairs
+    log.info("Loading prepared data...")
+    prepared_pairs = load_prepared_data()
+    log.info("Total prepared pairs: %d", len(prepared_pairs))
+
+    all_pairs = raw_pairs + synthetic_pairs + prepared_pairs
     log.info("Total combined pairs before validation: %d", len(all_pairs))
 
     if not all_pairs:

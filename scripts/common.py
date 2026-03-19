@@ -26,6 +26,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 DATA_RAW = PROJECT_ROOT / "data" / "raw"
 DATA_SYNTHETIC = PROJECT_ROOT / "data" / "synthetic"
 DATA_SYNTHETIC_REJECTED = DATA_SYNTHETIC / "rejected"
+DATA_PREPARED = PROJECT_ROOT / "data" / "prepared"
 DATA_COMBINED = PROJECT_ROOT / "data" / "combined"
 DATA_EVAL = PROJECT_ROOT / "data" / "eval"
 
@@ -45,6 +46,7 @@ ALL_DATA_DIRS = [
     DATA_RAW,
     DATA_SYNTHETIC,
     DATA_SYNTHETIC_REJECTED,
+    DATA_PREPARED,
     DATA_COMBINED,
     DATA_EVAL,
 ]
