@@ -155,11 +155,11 @@ Upload prepared training data **before** fine-tuning so it's versioned and prese
 
 ```bash
 # Login (one-time)
-huggingface-cli login
+hf auth login
 
 # Upload prepared data as a dataset repo
-huggingface-cli upload <hf_username>/aawaaz-transcript-cleanup data/prepared/ \
-  --repo-type dataset
+hf upload <hf_username>/aawaaz-transcript-cleanup data/prepared/ \
+  --type dataset
 
 # To update after adding more data, just re-run the same command
 ```
