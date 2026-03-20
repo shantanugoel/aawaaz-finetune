@@ -318,7 +318,7 @@ def _generate_model_card(
         "| `temperature` | `0.0` | Deterministic — formatting task, not creative |",
         "| `top_p` | `1.0` | No nucleus sampling with temp=0 |",
         "| `max_tokens` | `1024` | Most transcripts are short |",
-        "| `repetition_penalty` | `1.1` | Slight penalty to avoid degenerate loops |",
+        "| `repetition_penalty` | `1.08` | Slight penalty to avoid degenerate loops |",
         "",
         "> **Note:** This model uses Qwen3's chat format. Thinking mode (`<think>`) "
         "is disabled — if you see `<think>` tags in output, pass `enable_thinking=False` "
@@ -445,7 +445,7 @@ def _generate_model_card(
         "    prompt=prompt,",
         "    max_tokens=1024,",
         "    temp=0.0,",
-        "    repetition_penalty=1.1,",
+        "    repetition_penalty=1.08,",
         ")",
         "print(response)",
         "```",
