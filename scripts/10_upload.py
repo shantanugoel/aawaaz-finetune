@@ -210,22 +210,78 @@ def _generate_model_card(
     # ── YAML front matter ──────────────────────────────────────────────
     lines = [
         "---",
-        f"license: apache-2.0",
+        "license: apache-2.0",
         f"base_model: {mcfg.base_model}",
+        "base_model_relation: finetune",
         "tags:",
         "  - transcription",
         "  - text-cleanup",
         "  - mlx",
-        "  - lora",
         f"  - {bits}bit",
+        "  - quantized",
         "  - qwen3",
+        "  - apple-silicon",
         "language:",
         "  - en",
+        "datasets:",
+        "  - shantanugoel/aawaaz-transcript-cleanup-dataset",
         "library_name: mlx",
         "pipeline_tag: text-generation",
+        "widget:",
+        '  - text: "um so I was thinking uh we should probably like meet tomorrow at uh three o\'clock"',
+        '    example_title: Remove fillers',
+        '  - text: "the total came to like five hundred and twenty three dollars and uh forty seven cents"',
+        '    example_title: Number normalization',
+        '  - text: "wait no not Tuesday I meant Wednesday comma December fifteenth period"',
+        '    example_title: Self-correction + punctuation',
+        '  - text: "so basically the dash dash verbose flag will uh show you more output"',
+        '    example_title: Code/tech syntax',
+    ]
+
+    # ── model-index (structured eval results) ─────────────────────────
+    if eval_summary:
+        metrics = eval_summary.get("metrics", {})
+        em = metrics.get("exact_match", {})
+        cer = metrics.get("cer", {})
+        bleu = metrics.get("bleu", {})
+        fmt = metrics.get("format_accuracy", {})
+
+        mi_lines = [
+            "model-index:",
+            f"  - name: {repo_id.split('/')[-1]}",
+            "    results:",
+            "      - task:",
+            "          type: text-generation",
+            "          name: Transcription Cleanup",
+            "        dataset:",
+            "          type: shantanugoel/aawaaz-transcript-cleanup-dataset",
+            "          name: aawaaz-transcript-cleanup-dataset",
+            "          split: test",
+            "        metrics:",
+        ]
+        if "rate" in em:
+            mi_lines.append(f"          - type: exact_match")
+            mi_lines.append(f"            value: {em['rate']:.4f}")
+            mi_lines.append(f"            name: Exact Match Rate")
+        if "mean" in cer:
+            mi_lines.append(f"          - type: cer")
+            mi_lines.append(f"            value: {cer['mean']:.4f}")
+            mi_lines.append(f"            name: Character Error Rate (Mean)")
+        if "corpus_bleu" in bleu:
+            mi_lines.append(f"          - type: bleu")
+            mi_lines.append(f"            value: {bleu['corpus_bleu']:.4f}")
+            mi_lines.append(f"            name: BLEU (Corpus)")
+        if "mean" in fmt and fmt["mean"] is not None:
+            mi_lines.append(f"          - type: format_accuracy")
+            mi_lines.append(f"            value: {fmt['mean']:.4f}")
+            mi_lines.append(f"            name: Format Accuracy")
+
+        lines.extend(mi_lines)
+
+    lines.extend([
         "---",
         "",
-    ]
+    ])
 
     # ── Title and description ──────────────────────────────────────────
     lines.extend([
@@ -269,6 +325,11 @@ def _generate_model_card(
         "to the tokenizer's `apply_chat_template()` or include `/no_think` at the end "
         "of the system prompt.",
         "",
+        "> **Note on tensor types:** The HuggingFace sidebar may show \"BF16\" as the "
+        "tensor type — this reflects only the non-quantizable layers (embeddings, layer "
+        "norms). The majority of weights are 4-bit quantized (stored as U32 packed format). "
+        "Actual model disk size is ~330MB, not the ~1.1GB of the full BF16 model.",
+        "",
     ])
 
     # ── Training details ───────────────────────────────────────────────
@@ -289,6 +350,7 @@ def _generate_model_card(
         f"- **Method:** LoRA (rank={cfg.training.lora.rank}, alpha={cfg.training.lora.alpha})",
         f"- **Max sequence length:** {cfg.training.max_seq_length}",
         f"- **Quantization:** {bits}-bit, group size {cfg.quantization.group_size}",
+        f"- **Hardware:** Apple Silicon (MLX framework)",
     ])
 
     if norm_train.get("total_steps"):
@@ -337,7 +399,7 @@ def _generate_model_card(
 
         fmt = metrics.get("format_accuracy", {})
         if "mean" in fmt and fmt["mean"] is not None:
-            lines.append(f"| Format Accuracy | {fmt['mean']:.2f} |")
+            lines.append(f"| Format Accuracy | {fmt['mean']:.4f} |")
 
         latency = metrics.get("latency", {})
         if "tokens_per_second" in latency:
@@ -529,13 +591,37 @@ def _upload_model(
     )
 
     # Upload quantized model directory
+    # Sanitize quantize_summary.json to strip local filesystem paths
+    quant_summary_path = model_dir / "quantize_summary.json"
+    sanitized_quant_tmp = None
+    original_quant_content = None
+    if quant_summary_path.exists():
+        try:
+            original_quant_content = quant_summary_path.read_text(encoding="utf-8")
+            quant_data = json.loads(original_quant_content)
+            path_keys = ("source_dir", "output_dir")
+            for key in path_keys:
+                if key in quant_data:
+                    quant_data[key] = Path(quant_data[key]).name
+            sanitized = json.dumps(quant_data, indent=2, ensure_ascii=False) + "\n"
+            quant_summary_path.write_text(sanitized, encoding="utf-8")
+            sanitized_quant_tmp = True
+            logger.debug("Sanitized local paths in quantize_summary.json for upload")
+        except (json.JSONDecodeError, OSError) as exc:
+            logger.warning("Could not sanitize quantize_summary.json: %s", exc)
+
     logger.info("Uploading model folder: %s", model_dir)
-    api.upload_folder(
-        folder_path=str(model_dir),
-        repo_id=repo_id,
-        commit_message=f"Upload {mcfg.name} quantized model ({bits}-bit)",
-        ignore_patterns=[".*", "__pycache__", "*.pyc"],
-    )
+    try:
+        api.upload_folder(
+            folder_path=str(model_dir),
+            repo_id=repo_id,
+            commit_message=f"Upload {mcfg.name} quantized model ({bits}-bit)",
+            ignore_patterns=[".*", "__pycache__", "*.pyc"],
+        )
+    finally:
+        # Restore original quantize_summary.json so local file is unchanged
+        if sanitized_quant_tmp and original_quant_content is not None:
+            quant_summary_path.write_text(original_quant_content, encoding="utf-8")
     logger.info("Model folder uploaded successfully")
 
     # Upload model card (README.md)
