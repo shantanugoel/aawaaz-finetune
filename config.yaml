@@ -98,7 +98,7 @@ training:
 
   # LoRA config
   lora:
-    rank: 8                    # r — higher for small models
+    rank: 32                    # r — higher for small models
     alpha: 64                   # Scaling factor (typically 2x rank)
     dropout: 0.0
     target_modules:             # Which layers to adapt
@@ -123,7 +123,7 @@ training:
 
   # Mac/MLX settings
   mac:
-    learning_rate: 1e-5
+    learning_rate: 2e-5
     batch_size: 4
     lora_layers: 16             # MLX-specific: number of layers to apply LoRA
     iters: 3000                 # MLX uses iters instead of epochs

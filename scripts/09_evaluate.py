@@ -372,7 +372,7 @@ def _run_inference(
             prompt=formatted,
             max_tokens=max_tokens,
             sampler=make_sampler(temp=temperature),
-            logits_processors=make_logits_processors(repetition_penalty=1.1),
+            logits_processors=make_logits_processors(repetition_penalty=1.08),
         )
         elapsed = time.perf_counter() - start_time
 
